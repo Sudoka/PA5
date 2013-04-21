@@ -404,7 +404,7 @@ void StringEntry::code_def(ostream& s, int stringclasstag)
 
  /***** Add dispatch information for class String ******/
 
-      s << endl;                                              // dispatch table
+      s << "String_dispTab" << endl;                          // dispatch table
       s << WORD;  lensym->code_ref(s);  s << endl;            // string length
   emit_string_constant(s,str);                                // ascii string
   s << ALIGN;                                                 // align to word
@@ -446,7 +446,7 @@ void IntEntry::code_def(ostream &s, int intclasstag)
 
  /***** Add dispatch information for class Int ******/
 
-      s << endl;                                          // dispatch table
+      s << "Int_dispTab" << endl;                         // dispatch table
       s << WORD << str << endl;                           // integer value
 }
 
@@ -490,7 +490,7 @@ void BoolConst::code_def(ostream& s, int boolclasstag)
 
  /***** Add dispatch information for class Bool ******/
 
-      s << endl;                                            // dispatch table
+      s << "Bool_dispTab" << endl;                          // dispatch table
       s << WORD << val << endl;                             // value (0 or 1)
 }
 
@@ -616,12 +616,22 @@ void CgenClassTable::code_constants()
   code_bools(boolclasstag);
 }
 
+void CgenClassTable::code_classname_tables()
+{
+  str << "class_nameTab:" << endl;
+  for (List<CgenNode> *l = nds; l; l = l->tl()) {
+    str << WORD ;
+    stringtable.lookup_string(l->hd()->name->get_string())->code_ref(str);
+    str << endl;
+  }
+}
+
 
 CgenClassTable::CgenClassTable(Classes classes, ostream& s) : nds(NULL) , str(s)
 {
-   stringclasstag = 0 /* Change to your String class tag here */;
-   intclasstag =    0 /* Change to your Int class tag here */;
-   boolclasstag =   0 /* Change to your Bool class tag here */;
+   stringclasstag = 4 /* Change to your String class tag here */;
+   intclasstag =    2 /* Change to your Int class tag here */;
+   boolclasstag =   3 /* Change to your Bool class tag here */;
 
    enterscope();
    if (cgen_debug) cout << "Building CgenClassTable" << endl;
@@ -831,6 +841,8 @@ void CgenClassTable::code()
 //                 Add your code to emit
 //                   - prototype objects
 //                   - class_nameTab
+  if (cgen_debug) cout << "class name tables" << endl;
+  code_classname_tables();
 //                   - dispatch tables
 //
 
