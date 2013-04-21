@@ -32,6 +32,7 @@ private:
    void code_select_gc();
    void code_constants();
    void code_classname_tables();
+   void code_classdisp_tables();
 
 // The following creates an inheritance graph from
 // a list of classes.  The graph is implemented as

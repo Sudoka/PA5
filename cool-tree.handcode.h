@@ -9,6 +9,7 @@
 #include "cool.h"
 #include "stringtab.h"
 #define yylineno curr_lineno;
+enum FeatureType  {Method, Attr};
 extern int yylineno;
 
 inline Boolean copy_Boolean(Boolean b) {return b; }
@@ -69,7 +70,14 @@ void dump_with_types(ostream&,int);
 
 
 #define Feature_EXTRAS                                        \
-virtual void dump_with_types(ostream&,int) = 0; 
+virtual void dump_with_types(ostream&,int) = 0; \
+virtual FeatureType get_type() = 0;
+
+#define method_EXTRAS \
+FeatureType get_type() { return Method; }
+
+#define attr_EXTRAS \
+FeatureType get_type() { return Attr; }
 
 
 #define Feature_SHARED_EXTRAS                                       \

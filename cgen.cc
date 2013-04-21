@@ -626,12 +626,19 @@ void CgenClassTable::code_classname_tables()
   }
 }
 
+void CgenClassTable::code_classdisp_tables()
+{
+  for (List<CgenNode> *l = nds; l; l = l->tl()) {
+    str << l->hd()->name << "_dispTab: " << endl;
+    Features features = l->hd()->features;
+  }
+}
 
 CgenClassTable::CgenClassTable(Classes classes, ostream& s) : nds(NULL) , str(s)
 {
-   stringclasstag = 4 /* Change to your String class tag here */;
-   intclasstag =    2 /* Change to your Int class tag here */;
-   boolclasstag =   3 /* Change to your Bool class tag here */;
+   stringclasstag = 4;
+   intclasstag =    2;
+   boolclasstag =   3;
 
    enterscope();
    if (cgen_debug) cout << "Building CgenClassTable" << endl;
@@ -840,11 +847,13 @@ void CgenClassTable::code()
 
 //                 Add your code to emit
 //                   - prototype objects
+
 //                   - class_nameTab
   if (cgen_debug) cout << "class name tables" << endl;
   code_classname_tables();
 //                   - dispatch tables
-//
+  if (cgen_debug) cout << "class dispatch tables" << endl;
+  code_classdisp_tables();
 
   if (cgen_debug) cout << "coding global text" << endl;
   code_global_text();
