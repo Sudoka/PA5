@@ -1,0 +1,6 @@
+#!/bin/bash
+./lexer $* | ./parser $* | ./semant $* | /usr/class/cs143/cool/lib/.i686/cgen $*
+filename=$*
+file=${filename%%[.]*}
+mv $file".s" $file".correct.s"
+./lexer $* | ./parser $* | ./semant $* | ./cgen $*
