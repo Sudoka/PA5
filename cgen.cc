@@ -24,6 +24,8 @@
 
 #include "cgen.h"
 #include "cgen_gc.h"
+#include <vector>
+#include <set>
 
 extern void emit_string_constant(ostream& str, char *s);
 extern int cgen_debug;
@@ -618,19 +620,46 @@ void CgenClassTable::code_constants()
 
 void CgenClassTable::code_classname_tables()
 {
+  std::vector<CgenNodeP> nodevec;
   str << "class_nameTab:" << endl;
   for (List<CgenNode> *l = nds; l; l = l->tl()) {
-    str << WORD ;
-    stringtable.lookup_string(l->hd()->name->get_string())->code_ref(str);
+    nodevec.push_back(l->hd());
+  }
+  for ( int n = nodevec.size() - 1; n >= 0 ; --n ) {
+    str << WORD;
+    stringtable.lookup_string(nodevec[n]->name->get_string())->code_ref(str);
     str << endl;
   }
 }
 
 void CgenClassTable::code_classdisp_tables()
 {
-  for (List<CgenNode> *l = nds; l; l = l->tl()) {
-    str << l->hd()->name << "_dispTab: " << endl;
-    Features features = l->hd()->features;
+  std::vector<CgenNodeP> dispvec;
+  std::set<Symbol> nodeset;
+  for ( List<CgenNode> *l = nds; l; l = l->tl() ) {
+    for ( CgenNodeP n = l->hd(); n ; n = n->get_parentnd() ) {
+      dispvec.push_back(n);
+    }
+
+    if ( nodeset.find(l->hd()->name) != nodeset.end() ) {
+      continue;
+    }
+    else {
+      str << l->hd()->name << "_dispTab:" << endl; 
+      nodeset.insert(l->hd()->name);
+    }
+    for ( int i = dispvec.size() - 1; i >= 0 ; --i ) {
+      Features features = dispvec[i]->features;
+      for ( int j = features->first(); features->more(j); j = features->next(j) ) {
+        Feature feature = features->nth(j);
+        if ( feature->get_type() == Method ) {
+          str << WORD;
+          str << dispvec[i]->name<< ".";
+          str << static_cast<method_class*>(feature)->name << endl;
+        }
+      }
+    }
+    dispvec.clear();
   }
 }
 
