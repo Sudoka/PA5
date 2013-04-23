@@ -634,32 +634,46 @@ void CgenClassTable::code_classname_tables()
 
 void CgenClassTable::code_classdisp_tables()
 {
-  std::vector<CgenNodeP> dispvec;
-  std::set<Symbol> nodeset;
+  std::vector<CgenNodeP> node_vec;
+  std::set<Symbol> node_set;
   for ( List<CgenNode> *l = nds; l; l = l->tl() ) {
+    node_vec.clear();
     for ( CgenNodeP n = l->hd(); n ; n = n->get_parentnd() ) {
-      dispvec.push_back(n);
+      node_vec.push_back(n);
     }
 
-    if ( nodeset.find(l->hd()->name) != nodeset.end() ) {
-      continue;
-    }
-    else {
-      str << l->hd()->name << "_dispTab:" << endl; 
-      nodeset.insert(l->hd()->name);
-    }
-    for ( int i = dispvec.size() - 1; i >= 0 ; --i ) {
-      Features features = dispvec[i]->features;
-      for ( int j = features->first(); features->more(j); j = features->next(j) ) {
-        Feature feature = features->nth(j);
-        if ( feature->get_type() == Method ) {
-          str << WORD;
-          str << dispvec[i]->name<< ".";
-          str << static_cast<method_class*>(feature)->name << endl;
-        }
+    for ( int i = node_vec.size() - 1; i >= 0; --i ) {
+      if ( node_set.find(node_vec[i]->name) != node_set.end() ) {
+        continue;
+      }
+      else {
+        node_set.insert(node_vec[i]->name);
+        code_classdisp_table(node_vec[i]);
       }
     }
-    dispvec.clear();
+  }
+}
+
+void CgenClassTable::code_classdisp_table(CgenNodeP node)
+{
+  if ( strcmp(node->name->get_string(), "_no_class") == 0 )
+    return;
+  str << node->name << "_dispTab:" << endl; 
+  std::vector<CgenNodeP> node_vec;
+  for ( CgenNodeP n = node; n; n = n->get_parentnd() ) {
+    node_vec.push_back(n);
+  }
+
+  for ( int i = node_vec.size() - 1; i >= 0; --i ) {
+    Features features = node_vec[i]->features;
+    for ( int j = features->first(); features->more(j); j = features->next(j) ) {
+      Feature feature = features->nth(j);
+      if ( feature->get_type() == Method ) {
+        str << WORD;
+        str << node_vec[i]->name<< ".";
+        str << static_cast<method_class*>(feature)->name << endl;
+      }
+    }
   }
 }
 
