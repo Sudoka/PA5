@@ -734,8 +734,8 @@ void CgenClassTable::code_class_prototype(CgenNodeP node) {
   // attributes
   for ( int i = 0; i < attr_vec.size(); ++i ) {
     str << WORD;
-    //attr_vec[i]->name->code_ref(str);
-    str << attr_vec[i]->name;
+    // FIXME
+    str << 0;
     str << endl;
   }
 }
@@ -754,6 +754,41 @@ CgenClassTable::CgenClassTable(Classes classes, ostream& s) : nds(NULL) , str(s)
 
    code();
    exitscope();
+}
+
+//
+void CgenClassTable::code_objects_init() {
+  std::vector<CgenNodeP> node_vec;
+  std::set<Symbol> node_set;
+  for ( List<CgenNode> *l = nds; l; l = l->tl() ) {
+    node_vec.clear();
+    for ( CgenNodeP n = l->hd(); n ; n = n->get_parentnd() ) {
+      node_vec.push_back(n);
+    }
+    for ( int i = node_vec.size() - 1; i >= 0; --i ) {
+      if ( node_set.find(node_vec[i]->name) != node_set.end() ) {
+        continue;
+      }
+      else {
+        node_set.insert(node_vec[i]->name);
+        code_object_init(node_vec[i]);
+      }
+    }
+  }
+}
+
+void CgenClassTable::code_object_init(CgenNodeP node) {
+  if ( node->name->equal_string("_no_class", strlen("_no_class")) )
+    return;
+
+  std::vector<CgenNodeP> node_vec;
+  for ( CgenNodeP n = node; n; n = n->get_parentnd() ) {
+    node_vec.push_back(n);
+  }
+
+  str << node->name << "_init:" << endl;
+  // actual code
+  emit_return(str);
 }
 
 void CgenClassTable::install_basic_classes()
@@ -951,16 +986,13 @@ void CgenClassTable::code()
   if (cgen_debug) cout << "coding constants" << endl;
   code_constants();
 
-//                 Add your code to emit
-//                   - prototype objects
-
 //                   - class_nameTab
   if (cgen_debug) cout << "class name tables" << endl;
   code_classname_tables();
 //                   - dispatch tables
   if (cgen_debug) cout << "class dispatch tables" << endl;
   code_classdisp_tables();
-//                   - class prototypes
+//                   - prototype objects
   if (cgen_debug) cout << "class prototypes" << endl;
   code_class_prototypes();
 
@@ -969,9 +1001,10 @@ void CgenClassTable::code()
 
 //                 Add your code to emit
 //                   - object initializer
+  if (cgen_debug) cout << "object initializer" << endl;
+  code_objects_init();
 //                   - the class methods
 //                   - etc...
-
 }
 
 
