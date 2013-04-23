@@ -620,15 +620,20 @@ void CgenClassTable::code_constants()
 
 void CgenClassTable::code_classname_tables()
 {
-  std::vector<CgenNodeP> nodevec;
+  std::vector<CgenNodeP> node_vec;
   str << "class_nameTab:" << endl;
   for (List<CgenNode> *l = nds; l; l = l->tl()) {
-    nodevec.push_back(l->hd());
+    node_vec.push_back(l->hd());
   }
-  for ( int n = nodevec.size() - 1; n >= 0 ; --n ) {
+  for ( int n = node_vec.size() - 1; n >= 0 ; --n ) {
     str << WORD;
-    stringtable.lookup_string(nodevec[n]->name->get_string())->code_ref(str);
+    stringtable.lookup_string(node_vec[n]->name->get_string())->code_ref(str);
     str << endl;
+  }
+  str << "class_objTab:" << endl;
+  for ( int n = node_vec.size() - 1; n >= 0; --n ) {
+    str << WORD << node_vec[n]->name << "_protObj" << endl;
+    str << WORD << node_vec[n]->name << "_init" << endl;
   }
 }
 
@@ -641,7 +646,6 @@ void CgenClassTable::code_classdisp_tables()
     for ( CgenNodeP n = l->hd(); n ; n = n->get_parentnd() ) {
       node_vec.push_back(n);
     }
-
     for ( int i = node_vec.size() - 1; i >= 0; --i ) {
       if ( node_set.find(node_vec[i]->name) != node_set.end() ) {
         continue;
@@ -656,8 +660,9 @@ void CgenClassTable::code_classdisp_tables()
 
 void CgenClassTable::code_classdisp_table(CgenNodeP node)
 {
-  if ( strcmp(node->name->get_string(), "_no_class") == 0 )
+  if ( node->name->equal_string("_no_class", strlen("_no_class")) )
     return;
+
   str << node->name << "_dispTab:" << endl; 
   std::vector<CgenNodeP> node_vec;
   for ( CgenNodeP n = node; n; n = n->get_parentnd() ) {
@@ -674,6 +679,64 @@ void CgenClassTable::code_classdisp_table(CgenNodeP node)
         str << static_cast<method_class*>(feature)->name << endl;
       }
     }
+  }
+}
+
+void CgenClassTable::code_class_prototypes() {
+  std::vector<CgenNodeP> node_vec;
+  std::set<Symbol> node_set;
+  for ( List<CgenNode> *l = nds; l; l = l->tl() ) {
+    node_vec.clear();
+    for ( CgenNodeP n = l->hd(); n ; n = n->get_parentnd() ) {
+      node_vec.push_back(n);
+    }
+    for ( int i = node_vec.size() - 1; i >= 0; --i ) {
+      if ( node_set.find(node_vec[i]->name) != node_set.end() ) {
+        continue;
+      }
+      else {
+        node_set.insert(node_vec[i]->name);
+        code_class_prototype(node_vec[i]);
+      }
+    }
+  }
+}
+
+void CgenClassTable::code_class_prototype(CgenNodeP node) {
+  if ( node->name->equal_string("_no_class", strlen("_no_class")) )
+    return;
+
+  std::vector<CgenNodeP> node_vec;
+  for ( CgenNodeP n = node; n; n = n->get_parentnd() ) {
+    node_vec.push_back(n);
+  }
+
+  std::vector<attr_class*> attr_vec;
+  for ( int i = node_vec.size() - 1; i >= 0; --i ) {
+    Features features = node_vec[i]->features;
+    for ( int j = features->first(); features->more(j); j = features->next(j) ) {
+      Feature feature = features->nth(j);
+      if ( feature->get_type() == Attr ) {
+        attr_vec.push_back(static_cast<attr_class*>(feature));
+      }
+    }
+  }
+
+  // garbage collection tag
+  str << WORD << "-1" << endl;
+  str << node->name << "_protObj:" << endl;
+  // class tag
+  str << WORD << node->getClasstag() << endl;
+  // object size
+  str << WORD << attr_vec.size() + 3 << endl;
+  // dispatch information
+  str << WORD << node->name << "_dispTab" << endl;
+  // attributes
+  for ( int i = 0; i < attr_vec.size(); ++i ) {
+    str << WORD;
+    //attr_vec[i]->name->code_ref(str);
+    str << attr_vec[i]->name;
+    str << endl;
   }
 }
 
@@ -710,13 +773,13 @@ void CgenClassTable::install_basic_classes()
 //
   addid(No_class,
 	new CgenNode(class_(No_class,No_class,nil_Features(),filename),
-			    Basic,this));
+			    Basic,this,false));
   addid(SELF_TYPE,
 	new CgenNode(class_(SELF_TYPE,No_class,nil_Features(),filename),
-			    Basic,this));
+			    Basic,this,false));
   addid(prim_slot,
 	new CgenNode(class_(prim_slot,No_class,nil_Features(),filename),
-			    Basic,this));
+			    Basic,this,false));
 
 // 
 // The Object class has no parent class. Its methods are
@@ -737,7 +800,7 @@ void CgenClassTable::install_basic_classes()
            single_Features(method(type_name, nil_Formals(), Str, no_expr()))),
            single_Features(method(copy, nil_Formals(), SELF_TYPE, no_expr()))),
 	   filename),
-    Basic,this));
+    Basic,this,true));
 
 // 
 // The IO class inherits from Object. Its methods are
@@ -760,7 +823,7 @@ void CgenClassTable::install_basic_classes()
             single_Features(method(in_string, nil_Formals(), Str, no_expr()))),
             single_Features(method(in_int, nil_Formals(), Int, no_expr()))),
 	   filename),	    
-    Basic,this));
+    Basic,this,true));
 
 //
 // The Int class has no methods and only a single attribute, the
@@ -772,7 +835,7 @@ void CgenClassTable::install_basic_classes()
 	    Object,
             single_Features(attr(val, prim_slot, no_expr())),
 	    filename),
-     Basic,this));
+     Basic,this,true));
 
 //
 // Bool also has only the "val" slot.
@@ -780,7 +843,7 @@ void CgenClassTable::install_basic_classes()
     install_class(
      new CgenNode(
       class_(Bool, Object, single_Features(attr(val, prim_slot, no_expr())),filename),
-      Basic,this));
+      Basic,this,true));
 
 //
 // The class Str has a number of slots and operations:
@@ -811,7 +874,7 @@ void CgenClassTable::install_basic_classes()
 				   Str, 
 				   no_expr()))),
 	     filename),
-        Basic,this));
+        Basic,this,true));
 
 }
 
@@ -838,7 +901,7 @@ void CgenClassTable::install_class(CgenNodeP nd)
 void CgenClassTable::install_classes(Classes cs)
 {
   for(int i = cs->first(); cs->more(i); i = cs->next(i))
-    install_class(new CgenNode(cs->nth(i),NotBasic,this));
+    install_class(new CgenNode(cs->nth(i),NotBasic,this,true));
 }
 
 //
@@ -897,6 +960,9 @@ void CgenClassTable::code()
 //                   - dispatch tables
   if (cgen_debug) cout << "class dispatch tables" << endl;
   code_classdisp_tables();
+//                   - class prototypes
+  if (cgen_debug) cout << "class prototypes" << endl;
+  code_class_prototypes();
 
   if (cgen_debug) cout << "coding global text" << endl;
   code_global_text();
@@ -920,14 +986,16 @@ CgenNodeP CgenClassTable::root()
 // CgenNode methods
 //
 ///////////////////////////////////////////////////////////////////////
-
-CgenNode::CgenNode(Class_ nd, Basicness bstatus, CgenClassTableP ct) :
+int CgenNode::classcount = 0;
+CgenNode::CgenNode(Class_ nd, Basicness bstatus, CgenClassTableP ct, bool inc_classtag) :
    class__class((const class__class &) *nd),
    parentnd(NULL),
    children(NULL),
    basic_status(bstatus)
 { 
    stringtable.add_string(name->get_string());          // Add class name to string table
+   if ( inc_classtag )
+     classtag = classcount++;
 }
 
 
