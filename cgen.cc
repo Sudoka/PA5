@@ -1046,9 +1046,27 @@ void assign_class::code(ostream &s) {
 }
 
 void static_dispatch_class::code(ostream &s) {
+  emit_move("$fp", "$sp", s);
+  emit_store("$ra", 0, "$sp", s);
+  emit_addiu("$sp", "$sp", -4, s);
+  // e
+  emit_load("$ra", 4, "$sp", s);
+  // calculate z
+  //emit_addiu("$sp", "$sp", z, s);
+  emit_load("$fp", 0, "$sp", s);
+  emit_return(s);
 }
 
 void dispatch_class::code(ostream &s) {
+  emit_move("$fp", "$sp", s);
+  emit_store("$ra", 0, "$sp", s);
+  emit_addiu("$sp", "$sp", -4, s);
+  // e
+  emit_load("$ra", 4, "$sp", s);
+  // calculate z
+  //emit_addiu("$sp", "$sp", z, s);
+  emit_load("$fp", 0, "$sp", s);
+  emit_return(s);
 }
 
 void cond_class::code(ostream &s) {
