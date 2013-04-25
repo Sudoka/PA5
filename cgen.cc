@@ -356,6 +356,13 @@ static void emit_gc_check(char *source, ostream &s)
   s << JAL << "_gc_check" << endl;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//
+static void runtime(Symbol name, ostream& s) {
+  if ( name->equal_string("abort", strlen("abort")) ) {
+    //emit_bne(ACC, "$zero", "label0");
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -783,14 +790,14 @@ void CgenClassTable::code_object_init(CgenNodeP node) {
 
   str << node->name << "_init:" << endl;
   // save to stack
-  emit_addiu("$sp", "$sp", -12, str);
-  emit_store("$fp", 3, "$sp", str);
-  emit_store("$s0", 2, "$sp", str);
-  emit_store("$ra", 1, "$sp", str);
+  emit_addiu(SP, SP, -12, str);
+  emit_store(FP, 3, SP, str);
+  emit_store(SELF, 2, SP, str);
+  emit_store(RA, 1, SP, str);
   // frame pointer
-  emit_addiu("$fp", "$sp", 4, str);
+  emit_addiu(FP, SP, 4, str);
   // save a0
-  emit_move("$s0", "$a0", str);
+  emit_move(SELF, ACC, str);
   // call parent
   Symbol parent_name = node->get_parentnd()->name;
   if ( !parent_name->equal_string("_no_class", strlen("_no_class")) ) {
@@ -799,12 +806,12 @@ void CgenClassTable::code_object_init(CgenNodeP node) {
     emit_jal((char*)buf.c_str(), str);
   }
   // load a0
-  emit_move("$a0", "$s0", str);
+  emit_move(ACC, SELF, str);
   // load from stack
-  emit_load("$fp", 3, "$sp", str);
-  emit_load("$s0", 2, "$sp", str);
-  emit_load("$ra", 1, "$sp", str);
-  emit_addiu("$sp", "$sp", 12, str);
+  emit_load(FP, 3, SP, str);
+  emit_load(SELF, 2, SP, str);
+  emit_load(RA, 1, SP, str);
+  emit_addiu(SP, SP, 12, str);
   // return
   emit_return(str);
 }
@@ -1080,45 +1087,46 @@ void assign_class::code(ostream &s) {
 }
 
 void static_dispatch_class::code(ostream &s) {
-  emit_move("$fp", "$sp", s);
-  emit_store("$ra", 0, "$sp", s);
-  emit_addiu("$sp", "$sp", -4, s);
+  emit_move(FP, SP, s);
+  emit_store(RA, 0, SP, s);
+  emit_addiu(SP, SP, -4, s);
   // e
-  emit_load("$ra", 4, "$sp", s);
+  emit_load(RA, 4, SP, s);
   // calculate z
-  //emit_addiu("$sp", "$sp", z, s);
-  emit_load("$fp", 0, "$sp", s);
+  //emit_addiu(SP, SP, z, s);
+  emit_load(FP, 0, SP, s);
   emit_return(s);
 }
 
 void dispatch_class::code(ostream &s) {
   // save to stack
-#if 0
-  emit_addiu("$sp", "$sp", -12, s);
-  emit_store("$fp", 3, "$sp", s);
-  emit_store("$s0", 2, "$sp", s);
-  emit_store("$ra", 1, "$sp", s);
+#if 1
+  emit_addiu(SP, SP, -12, s);
+  emit_store(FP, 3, SP, s);
+  emit_store(SELF, 2, SP, s);
+  emit_store(RA, 1, SP, s);
 #else
-  emit_push("$fp", s);
-  emit_push("$s0", s);
-  emit_push("$ra", s);
+  emit_push(FP, s);
+  emit_push(SELF, s);
+  emit_push(RA, s);
 #endif
     
   // frame pointer
-  emit_addiu("$fp", "$sp", 4, s);
+  emit_addiu(FP, SP, 4, s);
   // save a0
-  emit_move("$s0", "$a0", s);
+  emit_move(SELF, ACC, s);
   // expression
+  runtime(name, s);
   for ( int i = actual->first(); actual->more(i); i = actual->next(i) ) {
     actual->nth(i)->code(s);
   }
   // load a0
-  emit_move("$a0", "$s0", s);
+  emit_move(ACC, SELF, s);
   // load from stack
-  emit_load("$fp", 3, "$sp", s);
-  emit_load("$s0", 2, "$sp", s);
-  emit_load("$ra", 1, "$sp", s);
-  emit_addiu("$sp", "$sp", 12, s);
+  emit_load(FP, 3, SP, s);
+  emit_load(SELF, 2, SP, s);
+  emit_load(RA, 1, SP, s);
+  emit_addiu(SP, SP, 12, s);
   // return
   emit_return(s);
 }
@@ -1142,15 +1150,39 @@ void let_class::code(ostream &s) {
 }
 
 void plus_class::code(ostream &s) {
+  e1->code(s);
+  emit_push(ACC, s);
+  e2->code(s);
+  emit_load(T1, 1, SP, s);
+  emit_add(ACC, T1, ACC, s);
+  emit_addiu(SP, SP, -4, s);
 }
 
 void sub_class::code(ostream &s) {
+  e1->code(s);
+  emit_push(ACC, s);
+  e2->code(s);
+  emit_load(T1, 1, SP, s);
+  emit_sub(ACC, T1, ACC, s);
+  emit_addiu(SP, SP, -4, s);
 }
 
 void mul_class::code(ostream &s) {
+  e1->code(s);
+  emit_push(ACC, s);
+  e2->code(s);
+  emit_load(T1, 1, SP, s);
+  emit_mul(ACC, T1, ACC, s);
+  emit_addiu(SP, SP, -4, s);
 }
 
 void divide_class::code(ostream &s) {
+  e1->code(s);
+  emit_push(ACC, s);
+  e2->code(s);
+  emit_load(T1, 1, SP, s);
+  emit_div(ACC, T1, ACC, s);
+  emit_addiu(SP, SP, -4, s);
 }
 
 void neg_class::code(ostream &s) {
@@ -1197,5 +1229,3 @@ void no_expr_class::code(ostream &s) {
 
 void object_class::code(ostream &s) {
 }
-
-
