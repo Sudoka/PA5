@@ -781,14 +781,46 @@ void CgenClassTable::code_object_init(CgenNodeP node) {
   if ( node->name->equal_string("_no_class", strlen("_no_class")) )
     return;
 
-  std::vector<CgenNodeP> node_vec;
-  for ( CgenNodeP n = node; n; n = n->get_parentnd() ) {
-    node_vec.push_back(n);
-  }
-
   str << node->name << "_init:" << endl;
-  // actual code
+  // save to stack
+  emit_addiu("$sp", "$sp", -12, str);
+  emit_store("$fp", 3, "$sp", str);
+  emit_store("$s0", 2, "$sp", str);
+  emit_store("$ra", 1, "$sp", str);
+  // frame pointer
+  emit_addiu("$fp", "$sp", 4, str);
+  // save a0
+  emit_move("$s0", "$a0", str);
+  // call parent
+  Symbol parent_name = node->get_parentnd()->name;
+  if ( !parent_name->equal_string("_no_class", strlen("_no_class")) ) {
+    std::string buf = parent_name->get_string();
+    buf += "_init";
+    emit_jal((char*)buf.c_str(), str);
+  }
+  // load a0
+  emit_move("$a0", "$s0", str);
+  // load from stack
+  emit_load("$fp", 3, "$sp", str);
+  emit_load("$s0", 2, "$sp", str);
+  emit_load("$ra", 1, "$sp", str);
+  emit_addiu("$sp", "$sp", 12, str);
+  // return
   emit_return(str);
+}
+
+void CgenClassTable::code_class_methods() {
+  for ( List<CgenNode> *l = nds; l; l = l->tl() ) {
+    Features features = l->hd()->features;
+    for ( int i = features->first(); features->more(i); i = features->next(i) ) {
+      Feature feature = features->nth(i);
+      if ( feature->get_type() == Method ) {
+        method_class* method = static_cast<method_class*>(feature);
+        str << l->hd()->name << "." << method->name << ":" << endl;
+        method->expr->code(str);
+      }
+    }
+  }
 }
 
 void CgenClassTable::install_basic_classes()
@@ -999,12 +1031,14 @@ void CgenClassTable::code()
   if (cgen_debug) cout << "coding global text" << endl;
   code_global_text();
 
-//                 Add your code to emit
 //                   - object initializer
   if (cgen_debug) cout << "object initializer" << endl;
   code_objects_init();
 //                   - the class methods
+  if (cgen_debug) cout << "class methods" << endl;
+  code_class_methods();
 //                   - etc...
+//
 }
 
 
@@ -1058,14 +1092,34 @@ void static_dispatch_class::code(ostream &s) {
 }
 
 void dispatch_class::code(ostream &s) {
-  emit_move("$fp", "$sp", s);
-  emit_store("$ra", 0, "$sp", s);
-  emit_addiu("$sp", "$sp", -4, s);
-  // e
-  emit_load("$ra", 4, "$sp", s);
-  // calculate z
-  //emit_addiu("$sp", "$sp", z, s);
-  emit_load("$fp", 0, "$sp", s);
+  // save to stack
+#if 0
+  emit_addiu("$sp", "$sp", -12, s);
+  emit_store("$fp", 3, "$sp", s);
+  emit_store("$s0", 2, "$sp", s);
+  emit_store("$ra", 1, "$sp", s);
+#else
+  emit_push("$fp", s);
+  emit_push("$s0", s);
+  emit_push("$ra", s);
+#endif
+    
+  // frame pointer
+  emit_addiu("$fp", "$sp", 4, s);
+  // save a0
+  emit_move("$s0", "$a0", s);
+  // expression
+  for ( int i = actual->first(); actual->more(i); i = actual->next(i) ) {
+    actual->nth(i)->code(s);
+  }
+  // load a0
+  emit_move("$a0", "$s0", s);
+  // load from stack
+  emit_load("$fp", 3, "$sp", s);
+  emit_load("$s0", 2, "$sp", s);
+  emit_load("$ra", 1, "$sp", s);
+  emit_addiu("$sp", "$sp", 12, s);
+  // return
   emit_return(s);
 }
 
@@ -1079,6 +1133,9 @@ void typcase_class::code(ostream &s) {
 }
 
 void block_class::code(ostream &s) {
+  for ( int i = body->first(); body->more(i); i = body->next(i) ) {
+    body->nth(i)->code(s);
+  }
 }
 
 void let_class::code(ostream &s) {

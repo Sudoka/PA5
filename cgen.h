@@ -38,6 +38,7 @@ private:
    void code_class_prototype(CgenNodeP node);
    void code_objects_init();
    void code_object_init(CgenNodeP node);
+   void code_class_methods();
 
 // The following creates an inheritance graph from
 // a list of classes.  The graph is implemented as
