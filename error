@@ -10,6 +10,7 @@ submission: ..
 
 	-1 (assignment-val)	 Evaluating assignment expressions
 	-1 (basic-init)	 Default initial values of baisc classes 
+	-1 (basicequality)	 Simple equality tests
 	-1 (bigexpr)	 A large arithmetic expression
 	-1 (bool)	 Boolean objects
 	-1 (calls)	 Method calls
@@ -62,8 +63,8 @@ submission: ..
 [GC Test Case: simple-gc.cl]
 	-5 (simple-gc)	 Simple examine with garbage collection
 =====================================================================
-You got a score of 4 out of 63.
+You got a score of 3 out of 63.
 
 Submit code: 
-PA4-4:1cbb74dce36e8e5ccdf832e3e89e0856
+PA4-3:d0f2b30dcdccb91ce562ca73f5706d12
 
