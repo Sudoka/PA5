@@ -8,10 +8,8 @@ make: Leaving directory `/home/yyhuang/compiler/PA5'
 =====================================================================
 submission: ..
 
-	-1 (abort)	 Calling abort() method
 	-1 (assignment-val)	 Evaluating assignment expressions
 	-1 (basic-init)	 Default initial values of baisc classes 
-	-1 (basicequality)	 Simple equality tests
 	-1 (bigexpr)	 A large arithmetic expression
 	-1 (bool)	 Boolean objects
 	-1 (calls)	 Method calls
@@ -44,8 +42,6 @@ submission: ..
 	-1 (new-self-init)	 Checking evaluation of attribute initialization exprs on a "new"d object
 	-1 (new-st)	 New SELF_TYPE behavior
 	-1 (newbasic)	 Use of new with basic classes
-	-1 (not)	 "not" operator
-	-1 (objectequality)	 Object equality tests
 	-1 (override)	 Dispatch of overridden functions
 	-1 (primes)	 prime number program from examples directory
 	-1 (scoping)	 Scoping test
@@ -66,8 +62,8 @@ submission: ..
 [GC Test Case: simple-gc.cl]
 	-5 (simple-gc)	 Simple examine with garbage collection
 =====================================================================
-You got a score of 0 out of 63.
+You got a score of 4 out of 63.
 
 Submit code: 
-PA4-0:6b44967eb252d2ed06cabc8d8052f271
+PA4-4:1cbb74dce36e8e5ccdf832e3e89e0856
 

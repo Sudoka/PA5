@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <map>
 #include "emit.h"
 #include "cool-tree.h"
 #include "symtab.h"
@@ -65,6 +66,7 @@ private:
                                               // `NotBasic' otherwise
    int classtag;                              // classtag
    static int classcount;                     // classcount for classtag
+   std::map<Symbol, int> method_map;          // method <-> idx map
 
 public:
    CgenNode(Class_ c,
@@ -78,6 +80,8 @@ public:
    CgenNodeP get_parentnd() { return parentnd; }
    int basic() { return (basic_status == Basic); }
    int getClasstag() { return classtag; }
+   void set_method_index(Symbol name, int index);
+   int get_method_index(Symbol name);
 };
 
 class BoolConst 

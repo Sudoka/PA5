@@ -118,6 +118,9 @@ static char *gc_collect_names[] =
 BoolConst falsebool(FALSE);
 BoolConst truebool(TRUE);
 
+// label_idx is used for count label usage
+int label_idx = 0;
+
 //*********************************************************
 //
 // Define method for code generation
@@ -134,12 +137,12 @@ BoolConst truebool(TRUE);
 void program_class::cgen(ostream &os) 
 {
   // spim wants comments to start with '#'
-  os << "# start of generated code\n";
+  //os << "# start of generated code\n";
 
   initialize_constants();
   CgenClassTable *codegen_classtable = new CgenClassTable(classes,os);
 
-  os << "\n# end of generated code\n";
+  //os << "\n# end of generated code\n";
 }
 
 
@@ -354,14 +357,6 @@ static void emit_gc_check(char *source, ostream &s)
 {
   if (source != (char*)A1) emit_move(A1, source, s);
   s << JAL << "_gc_check" << endl;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-//
-static void runtime(Symbol name, ostream& s) {
-  if ( name->equal_string("abort", strlen("abort")) ) {
-    //emit_bne(ACC, "$zero", "label0");
-  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -676,6 +671,7 @@ void CgenClassTable::code_classdisp_table(CgenNodeP node)
     node_vec.push_back(n);
   }
 
+  int index = 0;
   for ( int i = node_vec.size() - 1; i >= 0; --i ) {
     Features features = node_vec[i]->features;
     for ( int j = features->first(); features->more(j); j = features->next(j) ) {
@@ -684,6 +680,7 @@ void CgenClassTable::code_classdisp_table(CgenNodeP node)
         str << WORD;
         str << node_vec[i]->name<< ".";
         str << static_cast<method_class*>(feature)->name << endl;
+        node->set_method_index(static_cast<method_class*>(feature)->name, index++);
       }
     }
   }
@@ -739,11 +736,25 @@ void CgenClassTable::code_class_prototype(CgenNodeP node) {
   // dispatch information
   str << WORD << node->name << "_dispTab" << endl;
   // attributes
-  for ( int i = 0; i < attr_vec.size(); ++i ) {
+  if ( node->getClasstag() == stringclasstag ) {
+    IntEntry* entry = inttable.lookup_string("0");
     str << WORD;
-    // FIXME
-    str << 0;
-    str << endl;
+    entry->code_ref(str);
+    str << endl << WORD << 0 << endl;
+  }
+  else if ( node->getClasstag() == boolclasstag || node->getClasstag() == intclasstag ) {
+    str << WORD << 0 << endl;
+  }
+  else {
+    for ( int i = 0; i < attr_vec.size(); ++i ) {
+      attr_class* attr = attr_vec[i];
+      if ( attr->type_decl->equal_string("String", strlen("String")) ) {
+        str << WORD << 0 << endl;
+      }
+      else {
+        str << WORD << 0 << endl;
+      }
+    }
   }
 }
 
@@ -818,13 +829,37 @@ void CgenClassTable::code_object_init(CgenNodeP node) {
 
 void CgenClassTable::code_class_methods() {
   for ( List<CgenNode> *l = nds; l; l = l->tl() ) {
-    Features features = l->hd()->features;
-    for ( int i = features->first(); features->more(i); i = features->next(i) ) {
-      Feature feature = features->nth(i);
-      if ( feature->get_type() == Method ) {
-        method_class* method = static_cast<method_class*>(feature);
-        str << l->hd()->name << "." << method->name << ":" << endl;
-        method->expr->code(str);
+    if ( l->hd()->getClasstag() > stringclasstag ) {
+      Features features = l->hd()->features;
+      for ( int i = features->first(); features->more(i); i = features->next(i) ) {
+        Feature feature = features->nth(i);
+        if ( feature->get_type() == Method ) {
+          method_class* method = static_cast<method_class*>(feature);
+          str << l->hd()->name << "." << method->name << ":" << endl;
+          // save caller's information to stack
+          emit_addiu(SP, SP, -12, str);
+          emit_store(FP, 3, SP, str);
+          emit_store(SELF, 2, SP, str);
+          emit_store(RA, 1, SP, str);
+
+          // setup frame pointer
+          emit_addiu(FP, SP, 4, str);
+
+          // save a0
+          emit_move(SELF, ACC, str);
+
+          // generate code inside function defintion
+          method->expr->code(l->hd(), str);
+
+          // load from stack
+          emit_load(FP, 3, SP, str);
+          emit_load(SELF, 2, SP, str);
+          emit_load(RA, 1, SP, str);
+          emit_addiu(SP, SP, 12, str);
+
+          // return
+          emit_return(str);
+        }
       }
     }
   }
@@ -1012,6 +1047,15 @@ void CgenNode::set_parentnd(CgenNodeP p)
   parentnd = p;
 }
 
+void CgenNode::set_method_index(Symbol name, int index)
+{
+  method_map.insert(std::make_pair(name, index));
+}
+
+int CgenNode::get_method_index(Symbol name)
+{
+  return method_map.find(name)->second;
+}
 
 
 void CgenClassTable::code()
@@ -1083,124 +1127,115 @@ CgenNode::CgenNode(Class_ nd, Basicness bstatus, CgenClassTableP ct, bool inc_cl
 //
 //*****************************************************************
 
-void assign_class::code(ostream &s) {
+void assign_class::code(CgenNodeP classnode, ostream &s) {
 }
 
-void static_dispatch_class::code(ostream &s) {
-  emit_move(FP, SP, s);
-  emit_store(RA, 0, SP, s);
-  emit_addiu(SP, SP, -4, s);
-  // e
-  emit_load(RA, 4, SP, s);
-  // calculate z
-  //emit_addiu(SP, SP, z, s);
-  emit_load(FP, 0, SP, s);
-  emit_return(s);
-}
-
-void dispatch_class::code(ostream &s) {
-  // save to stack
-#if 1
-  emit_addiu(SP, SP, -12, s);
-  emit_store(FP, 3, SP, s);
-  emit_store(SELF, 2, SP, s);
-  emit_store(RA, 1, SP, s);
-#else
-  emit_push(FP, s);
-  emit_push(SELF, s);
-  emit_push(RA, s);
-#endif
-    
-  // frame pointer
-  emit_addiu(FP, SP, 4, s);
-  // save a0
+void static_dispatch_class::code(CgenNodeP classnode, ostream &s) {
   emit_move(SELF, ACC, s);
-  // expression
-  runtime(name, s);
-  for ( int i = actual->first(); actual->more(i); i = actual->next(i) ) {
-    actual->nth(i)->code(s);
-  }
-  // load a0
+
+  emit_bne(ACC, ZERO, label_idx, s);
+  emit_load_address(ACC, "str_const0", s);
+  emit_load_imm(T1, get_line_number(), s);
+  emit_jal("_dispatch_abort", s);
+
+  emit_label_def(label_idx++, s);
+  // locate dispatch table
+  emit_load(T1, 2, ACC, s);
+  // locate dispatch function location
+  int idx = classnode->get_method_index(name);
+  emit_load(T1, idx, T1, s);
+  // jump to method
+  emit_jalr(T1, s);
+}
+
+void dispatch_class::code(CgenNodeP classnode, ostream &s) {
   emit_move(ACC, SELF, s);
-  // load from stack
-  emit_load(FP, 3, SP, s);
-  emit_load(SELF, 2, SP, s);
-  emit_load(RA, 1, SP, s);
-  emit_addiu(SP, SP, 12, s);
-  // return
-  emit_return(s);
+
+  emit_bne(ACC, ZERO, label_idx, s);
+  emit_load_address(ACC, "str_const0", s);
+  emit_load_imm(T1, get_line_number(), s);
+  emit_jal("_dispatch_abort", s);
+
+  emit_label_def(label_idx++, s);
+  // locate dispatch table
+  emit_load(T1, 2, ACC, s);
+  // locate dispatch function location
+  int idx = classnode->get_method_index(name);
+  emit_load(T1, idx, T1, s);
+  // jump to method
+  emit_jalr(T1, s);
 }
 
-void cond_class::code(ostream &s) {
+void cond_class::code(CgenNodeP classnode, ostream &s) {
 }
 
-void loop_class::code(ostream &s) {
+void loop_class::code(CgenNodeP classnode, ostream &s) {
 }
 
-void typcase_class::code(ostream &s) {
+void typcase_class::code(CgenNodeP classnode, ostream &s) {
 }
 
-void block_class::code(ostream &s) {
+void block_class::code(CgenNodeP classnode, ostream &s) {
   for ( int i = body->first(); body->more(i); i = body->next(i) ) {
-    body->nth(i)->code(s);
+    body->nth(i)->code(classnode, s);
   }
 }
 
-void let_class::code(ostream &s) {
+void let_class::code(CgenNodeP classnode, ostream &s) {
 }
 
-void plus_class::code(ostream &s) {
-  e1->code(s);
+void plus_class::code(CgenNodeP classnode, ostream &s) {
+  e1->code(classnode, s);
   emit_push(ACC, s);
-  e2->code(s);
+  e2->code(classnode, s);
   emit_load(T1, 1, SP, s);
   emit_add(ACC, T1, ACC, s);
   emit_addiu(SP, SP, -4, s);
 }
 
-void sub_class::code(ostream &s) {
-  e1->code(s);
+void sub_class::code(CgenNodeP classnode, ostream &s) {
+  e1->code(classnode, s);
   emit_push(ACC, s);
-  e2->code(s);
+  e2->code(classnode, s);
   emit_load(T1, 1, SP, s);
   emit_sub(ACC, T1, ACC, s);
   emit_addiu(SP, SP, -4, s);
 }
 
-void mul_class::code(ostream &s) {
-  e1->code(s);
+void mul_class::code(CgenNodeP classnode, ostream &s) {
+  e1->code(classnode, s);
   emit_push(ACC, s);
-  e2->code(s);
+  e2->code(classnode, s);
   emit_load(T1, 1, SP, s);
   emit_mul(ACC, T1, ACC, s);
   emit_addiu(SP, SP, -4, s);
 }
 
-void divide_class::code(ostream &s) {
-  e1->code(s);
+void divide_class::code(CgenNodeP classnode, ostream &s) {
+  e1->code(classnode, s);
   emit_push(ACC, s);
-  e2->code(s);
+  e2->code(classnode, s);
   emit_load(T1, 1, SP, s);
   emit_div(ACC, T1, ACC, s);
   emit_addiu(SP, SP, -4, s);
 }
 
-void neg_class::code(ostream &s) {
+void neg_class::code(CgenNodeP classnode, ostream &s) {
 }
 
-void lt_class::code(ostream &s) {
+void lt_class::code(CgenNodeP classnode, ostream &s) {
 }
 
-void eq_class::code(ostream &s) {
+void eq_class::code(CgenNodeP classnode, ostream &s) {
 }
 
-void leq_class::code(ostream &s) {
+void leq_class::code(CgenNodeP classnode, ostream &s) {
 }
 
-void comp_class::code(ostream &s) {
+void comp_class::code(CgenNodeP classnode, ostream &s) {
 }
 
-void int_const_class::code(ostream& s)  
+void int_const_class::code(CgenNodeP classnode, ostream& s)  
 {
   //
   // Need to be sure we have an IntEntry *, not an arbitrary Symbol
@@ -1208,24 +1243,25 @@ void int_const_class::code(ostream& s)
   emit_load_int(ACC,inttable.lookup_string(token->get_string()),s);
 }
 
-void string_const_class::code(ostream& s)
+void string_const_class::code(CgenNodeP classnode, ostream& s)
 {
   emit_load_string(ACC,stringtable.lookup_string(token->get_string()),s);
 }
 
-void bool_const_class::code(ostream& s)
+void bool_const_class::code(CgenNodeP classnode, ostream& s)
 {
   emit_load_bool(ACC, BoolConst(val), s);
 }
 
-void new__class::code(ostream &s) {
+void new__class::code(CgenNodeP classnode, ostream &s) {
 }
 
-void isvoid_class::code(ostream &s) {
+void isvoid_class::code(CgenNodeP classnode, ostream &s) {
 }
 
-void no_expr_class::code(ostream &s) {
+void no_expr_class::code(CgenNodeP classnode, ostream &s) {
 }
 
-void object_class::code(ostream &s) {
+void object_class::code(CgenNodeP classnode, ostream &s) {
 }
+
