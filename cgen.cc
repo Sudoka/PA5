@@ -1139,8 +1139,6 @@ void assign_class::code(CgenNodeP classnode, ostream &s) {
 
 void static_dispatch_class::code(CgenNodeP classnode, ostream &s) {
   s << "#static_dispatch" << endl;
-  emit_move(SELF, ACC, s);
-
   emit_bne(ACC, ZERO, label_idx, s);
   emit_load_address(ACC, "str_const0", s);
   emit_load_imm(T1, get_line_number(), s);
@@ -1158,8 +1156,6 @@ void static_dispatch_class::code(CgenNodeP classnode, ostream &s) {
 
 void dispatch_class::code(CgenNodeP classnode, ostream &s) {
   s << "#dispatch" << endl;
-  emit_move(ACC, SELF, s);
-
   emit_bne(ACC, ZERO, label_idx, s);
   emit_load_address(ACC, "str_const0", s);
   emit_load_imm(T1, get_line_number(), s);
