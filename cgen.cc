@@ -1177,9 +1177,8 @@ void cond_class::code(CgenNodeP classnode, ostream &s) {
   int branch_end = label_idx++;
 
   pred->code(classnode, s);
-  emit_move(T1, ACC, s);
-  emit_load_bool(ACC, truebool, s);
-  emit_beq(T1, ACC, branch_true, s);
+  emit_load_bool(T1, truebool, s);
+  emit_beq(ACC, T1, branch_true, s);
   // false
   else_exp->code(classnode, s);
   emit_branch(branch_end, s);
@@ -1301,7 +1300,6 @@ void eq_class::code(CgenNodeP classnode, ostream &s) {
   emit_beq(T1, ACC, branch_true, s);
 
   // false
-  emit_load_bool(ACC, falsebool, s);
   // object comparison
   emit_move(T2, ACC, s);
   // initial a0: true, a1: false
