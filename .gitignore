@@ -1,4 +1,5 @@
 *.o
+*.s
 cgen
 data
 example
