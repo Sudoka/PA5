@@ -327,6 +327,12 @@ static void emit_push(char *reg, ostream& str)
   emit_addiu(SP,SP,-4,str);
 }
 
+static void emit_pop(char *reg, ostream& str)
+{
+  emit_load(reg,1,SP,str);
+  emit_addiu(SP,SP,4,str);
+}
+
 //
 // Fetch the integer value in an Int object.
 // Emits code to fetch the integer value of the Integer object pointed
@@ -1220,7 +1226,7 @@ void plus_class::code(CgenNodeP classnode, ostream &s) {
   e1->code(classnode, s);
   emit_push(ACC, s);
   e2->code(classnode, s);
-  emit_load(T1, 1, SP, s);
+  emit_pop(T1, s);
   emit_add(ACC, T1, ACC, s);
   emit_addiu(SP, SP, -4, s);
 }
@@ -1229,7 +1235,7 @@ void sub_class::code(CgenNodeP classnode, ostream &s) {
   e1->code(classnode, s);
   emit_push(ACC, s);
   e2->code(classnode, s);
-  emit_load(T1, 1, SP, s);
+  emit_pop(T1, s);
   emit_sub(ACC, T1, ACC, s);
   emit_addiu(SP, SP, -4, s);
 }
@@ -1238,7 +1244,7 @@ void mul_class::code(CgenNodeP classnode, ostream &s) {
   e1->code(classnode, s);
   emit_push(ACC, s);
   e2->code(classnode, s);
-  emit_load(T1, 1, SP, s);
+  emit_pop(T1, s);
   emit_mul(ACC, T1, ACC, s);
   emit_addiu(SP, SP, -4, s);
 }
@@ -1247,7 +1253,7 @@ void divide_class::code(CgenNodeP classnode, ostream &s) {
   e1->code(classnode, s);
   emit_push(ACC, s);
   e2->code(classnode, s);
-  emit_load(T1, 1, SP, s);
+  emit_pop(T1, s);
   emit_div(ACC, T1, ACC, s);
   emit_addiu(SP, SP, -4, s);
 }
@@ -1260,8 +1266,9 @@ void lt_class::code(CgenNodeP classnode, ostream &s) {
   int branch_end = label_idx++;
 
   e1->code(classnode, s);
-  emit_move(T1, ACC, s);
+  emit_push(ACC, s);
   e2->code(classnode, s);
+  emit_pop(T1, s);
   emit_blt(T1, ACC, branch_true, s);
   // false
   emit_load_bool(ACC, falsebool, s);
@@ -1278,9 +1285,11 @@ void eq_class::code(CgenNodeP classnode, ostream &s) {
   int branch_end = label_idx++;
 
   e1->code(classnode, s);
-  emit_move(T1, ACC, s);
+  emit_push(ACC, s);
   e2->code(classnode, s);
+  emit_pop(T1, s);
   emit_beq(T1, ACC, branch_true, s);
+
   // false
   emit_load_bool(ACC, falsebool, s);
   // object comparison
@@ -1302,8 +1311,9 @@ void leq_class::code(CgenNodeP classnode, ostream &s) {
   int branch_end = label_idx++;
 
   e1->code(classnode, s);
-  emit_move(T1, ACC, s);
+  emit_push(ACC, s);
   e2->code(classnode, s);
+  emit_pop(T1, s);
   emit_bleq(T1, ACC, branch_true, s);
   // false
   emit_load_bool(ACC, falsebool, s);
