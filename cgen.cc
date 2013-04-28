@@ -1167,21 +1167,41 @@ void dispatch_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void cond_class::code(CgenNodeP classnode, ostream &s) {
+  int branch_true = label_idx++;
+  int branch_end = label_idx++;
+
   pred->code(classnode, s);
   emit_move(T1, ACC, s);
   emit_load_bool(ACC, truebool, s);
-  emit_beq(T1, ACC, label_idx, s);
+  emit_beq(T1, ACC, branch_true, s);
   // false
   else_exp->code(classnode, s);
-  emit_branch(label_idx+1, s);
+  emit_branch(branch_end, s);
   // true
-  emit_label_def(label_idx++, s);
+  emit_label_def(branch_true, s);
   then_exp->code(classnode, s);
   // end
-  emit_label_def(label_idx, s);
+  emit_label_def(branch_end, s);
 }
 
 void loop_class::code(CgenNodeP classnode, ostream &s) {
+  int branch_cond = label_idx++;
+  int branch_true = label_idx++;
+  int branch_end = label_idx++;
+
+  emit_label_def(branch_cond, s);
+  pred->code(classnode, s);
+  emit_move(T1, ACC, s);
+  emit_load_bool(ACC, truebool, s);
+  emit_beq(T1, ACC, branch_true, s);
+  // false
+  emit_branch(branch_end, s);
+  // true
+  emit_label_def(branch_true, s);
+  body->code(classnode, s);
+  emit_branch(branch_cond, s);
+  // end
+  emit_label_def(branch_end, s);
 }
 
 void typcase_class::code(CgenNodeP classnode, ostream &s) {
@@ -1236,25 +1256,31 @@ void neg_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void lt_class::code(CgenNodeP classnode, ostream &s) {
+  int branch_true = label_idx++;
+  int branch_end = label_idx++;
+
   e1->code(classnode, s);
   emit_move(T1, ACC, s);
   e2->code(classnode, s);
-  emit_blt(T1, ACC, label_idx, s);
+  emit_blt(T1, ACC, branch_true, s);
   // false
   emit_load_bool(ACC, falsebool, s);
-  emit_branch(label_idx+1, s);
+  emit_branch(branch_end, s);
   // true
-  emit_label_def(label_idx++, s);
+  emit_label_def(branch_true, s);
   emit_load_bool(ACC, truebool, s);
   // end
-  emit_label_def(label_idx, s);
+  emit_label_def(branch_end, s);
 }
 
 void eq_class::code(CgenNodeP classnode, ostream &s) {
+  int branch_true = label_idx++;
+  int branch_end = label_idx++;
+
   e1->code(classnode, s);
   emit_move(T1, ACC, s);
   e2->code(classnode, s);
-  emit_beq(T1, ACC, label_idx, s);
+  emit_beq(T1, ACC, branch_true, s);
   // false
   emit_load_bool(ACC, falsebool, s);
   // object comparison
@@ -1263,30 +1289,48 @@ void eq_class::code(CgenNodeP classnode, ostream &s) {
   emit_load_bool(ACC, truebool, s);
   emit_load_bool(A1, falsebool, s);
   emit_jal("equality_test", s);
-  emit_branch(label_idx+1, s);
+  emit_branch(branch_end, s);
   // true
-  emit_label_def(label_idx++, s);
+  emit_label_def(branch_true, s);
   emit_load_bool(ACC, truebool, s);
   // end
-  emit_label_def(label_idx, s);
+  emit_label_def(branch_end, s);
 }
 
 void leq_class::code(CgenNodeP classnode, ostream &s) {
+  int branch_true = label_idx++;
+  int branch_end = label_idx++;
+
   e1->code(classnode, s);
   emit_move(T1, ACC, s);
   e2->code(classnode, s);
-  emit_bleq(T1, ACC, label_idx, s);
+  emit_bleq(T1, ACC, branch_true, s);
   // false
   emit_load_bool(ACC, falsebool, s);
-  emit_branch(label_idx+1, s);
+  emit_branch(branch_end, s);
   // true
-  emit_label_def(label_idx++, s);
+  emit_label_def(branch_true, s);
   emit_load_bool(ACC, truebool, s);
   // end
-  emit_label_def(label_idx, s);
+  emit_label_def(branch_end, s);
 }
 
 void comp_class::code(CgenNodeP classnode, ostream &s) {
+  int branch_true = label_idx++;
+  int branch_end = label_idx++;
+
+  e1->code(classnode, s);
+  emit_move(T1, ACC, s);
+  emit_load_bool(ACC, truebool, s);
+  emit_beq(T1, ACC, branch_true, s);
+  // false
+  emit_load_bool(ACC, truebool, s);
+  emit_branch(branch_end, s);
+  // true
+  emit_label_def(branch_true, s);
+  emit_load_bool(ACC, falsebool, s);
+  // end
+  emit_label_def(branch_end, s);
 }
 
 void int_const_class::code(CgenNodeP classnode, ostream& s)  
