@@ -1377,6 +1377,19 @@ void new__class::code(CgenNodeP classnode, ostream &s) {
 
 void isvoid_class::code(CgenNodeP classnode, ostream &s) {
   s << "#isvoid" << endl;
+  int branch_true = label_idx++;
+  int branch_end = label_idx++;
+
+  e1->code(classnode, s);
+  emit_beqz(ACC, branch_true, s);
+  // false
+  emit_load_bool(ACC, falsebool, s);
+  emit_branch(branch_end, s);
+  // true
+  emit_label_def(branch_true, s);
+  emit_load_bool(ACC, truebool, s);
+  // end
+  emit_label_def(branch_end, s);
 }
 
 void no_expr_class::code(CgenNodeP classnode, ostream &s) {
