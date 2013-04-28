@@ -66,6 +66,7 @@ private:
                                               // `NotBasic' otherwise
    int classtag;                              // classtag
    static int classcount;                     // classcount for classtag
+   std::map<Symbol, int> attr_map;            // attr <-> idx map
    std::map<Symbol, int> method_map;          // method <-> idx map
 
 public:
@@ -80,6 +81,8 @@ public:
    CgenNodeP get_parentnd() { return parentnd; }
    int basic() { return (basic_status == Basic); }
    int getClasstag() { return classtag; }
+   void set_attr_index(Symbol name, int index);
+   int get_attr_index(Symbol name);
    void set_method_index(Symbol name, int index);
    int get_method_index(Symbol name);
 };

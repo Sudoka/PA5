@@ -754,12 +754,8 @@ void CgenClassTable::code_class_prototype(CgenNodeP node) {
   else {
     for ( int i = 0; i < attr_vec.size(); ++i ) {
       attr_class* attr = attr_vec[i];
-      if ( attr->type_decl->equal_string("String", strlen("String")) ) {
-        str << WORD << 0 << endl;
-      }
-      else {
-        str << WORD << 0 << endl;
-      }
+      node->set_attr_index(attr->name, i);
+      str << WORD << 0 << endl;
     }
   }
 }
@@ -1053,6 +1049,22 @@ void CgenNode::set_parentnd(CgenNodeP p)
   parentnd = p;
 }
 
+void CgenNode::set_attr_index(Symbol name, int index)
+{
+  attr_map.insert(std::make_pair(name, index));
+}
+
+int CgenNode::get_attr_index(Symbol name)
+{
+  std::map<Symbol, int>::iterator it = attr_map.find(name);
+  if ( it != attr_map.end() ) {
+    return attr_map.find(name)->second;
+  }
+  else {
+    return -1;
+  }
+}
+
 void CgenNode::set_method_index(Symbol name, int index)
 {
   method_map.insert(std::make_pair(name, index));
@@ -1135,6 +1147,7 @@ CgenNode::CgenNode(Class_ nd, Basicness bstatus, CgenClassTableP ct, bool inc_cl
 
 void assign_class::code(CgenNodeP classnode, ostream &s) {
   s << "#assign" << endl;
+  expr->code(classnode, s);
 }
 
 void static_dispatch_class::code(CgenNodeP classnode, ostream &s) {
@@ -1266,6 +1279,8 @@ void divide_class::code(CgenNodeP classnode, ostream &s) {
 
 void neg_class::code(CgenNodeP classnode, ostream &s) {
   s << "#neg" << endl;
+  e1->code(classnode, s);
+  emit_neg(ACC, ACC, s);
 }
 
 void lt_class::code(CgenNodeP classnode, ostream &s) {
@@ -1393,10 +1408,15 @@ void isvoid_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void no_expr_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#expr" << endl;
 }
 
 void object_class::code(CgenNodeP classnode, ostream &s) {
   s << "#obj" << endl;
+  int idx = classnode->get_attr_index(name);
+  if ( idx != -1 ) {
+    // class attr
+    emit_load(ACC, idx + 3, SELF, s);
+  }
+  
 }
 
