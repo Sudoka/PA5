@@ -122,7 +122,8 @@ BoolConst truebool(TRUE);
 // label_idx is used for count label usage
 int label_idx = 0;
 std::map<Symbol, CgenNodeP> class_map;
-std::vector<std::string> attr_vec;
+std::vector<std::string> formal_vec;
+std::vector<std::string> local_vec;
 
 //*********************************************************
 //
@@ -842,12 +843,12 @@ void CgenClassTable::code_class_methods() {
         if ( feature->get_type() == Method ) {
           method_class* method = static_cast<method_class*>(feature);
 
-          // put attr in attr_vec for future use - calculate attr location in stack
+          // put attr in formal_vec for future use - calculate attr location in stack
           Formals formals = method->formals;
-          attr_vec.clear();
+          formal_vec.clear();
           for ( int j = formals->first(); formals->more(j); j = formals->next(j) ) {
             formal_class* formal = static_cast<formal_class*>(formals->nth(j));
-            attr_vec.push_back(formal->name->get_string());
+            formal_vec.push_back(formal->name->get_string());
           }
 
           str << l->hd()->name << "." << method->name << ":" << endl;
@@ -1164,10 +1165,17 @@ void assign_class::code(CgenNodeP classnode, ostream &s) {
   expr->code(classnode, s);
 
   std::string objname(name->get_string());
-  for ( int i = attr_vec.size() - 1; i >= 0; --i ) {
-    if ( attr_vec[i] == objname ) {
-      emit_store(ACC, i, FP, s);
-      // found in stack, return
+  for ( int i = local_vec.size() - 1; i >= 0; --i ) {
+    if ( local_vec[i] == objname ) {
+      emit_store(ACC, i + LOCAL_OFFSET, FP, s);
+      // found in local variable, return
+      return;
+    }
+  }
+  for ( int i = formal_vec.size() - 1; i >= 0; --i ) {
+    if ( formal_vec[i] == objname ) {
+      emit_store(ACC, i + FORMAL_OFFSET, FP, s);
+      // found in formal, return
       return;
     }
   }
@@ -1248,11 +1256,12 @@ void dispatch_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void cond_class::code(CgenNodeP classnode, ostream &s) {
-  //s << "#cond" << endl;
   int branch_true = label_idx++;
   int branch_end = label_idx++;
 
+  s << "#cond" << endl;
   pred->code(classnode, s);
+  s << "#condend" << endl;
   emit_load_bool(T1, truebool, s);
   emit_beq(ACC, T1, branch_true, s);
   // false
@@ -1300,9 +1309,25 @@ void block_class::code(CgenNodeP classnode, ostream &s) {
 
 void let_class::code(CgenNodeP classnode, ostream &s) {
   //s << "#let" << endl;
-  init->code(classnode, s);
+  if ( !init->type ) {
+    if ( type_decl->equal_string("String", strlen("String")) ) {
+      emit_load_string(ACC, stringtable.lookup_string(""), s);
+    }
+    else if ( type_decl->equal_string("Int", strlen("Int")) ) {
+      emit_load_int(ACC, inttable.lookup_string("0"), s);
+    }
+    else if  ( type_decl->equal_string("Bool", strlen("Bool")) ) {
+      emit_load_bool(ACC, BoolConst(0), s);
+    }
+    else {
+      init->code(classnode, s);
+    }
+  }
+  else {
+    init->code(classnode, s);
+  }
   // push let attr into stack
-  attr_vec.push_back(identifier->get_string());
+  local_vec.push_back(identifier->get_string());
   emit_push(ACC, s);
 
   // generate body
@@ -1310,7 +1335,7 @@ void let_class::code(CgenNodeP classnode, ostream &s) {
 
   // pop let attr from stack
   emit_addiu(SP, SP, WORD_SIZE, s);
-  attr_vec.pop_back();
+  local_vec.pop_back();
 }
 
 void plus_class::code(CgenNodeP classnode, ostream &s) {
@@ -1508,7 +1533,7 @@ void isvoid_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void no_expr_class::code(CgenNodeP classnode, ostream &s) {
-  emit_load_address(ACC, ZERO, s);
+  emit_move(ACC, ZERO, s);
 }
 
 void object_class::code(CgenNodeP classnode, ostream &s) {
@@ -1518,10 +1543,17 @@ void object_class::code(CgenNodeP classnode, ostream &s) {
   }
 
   std::string objname(name->get_string());
-  for ( int i = attr_vec.size() - 1; i >= 0; --i ) {
-    if ( attr_vec[i] == objname ) {
-      emit_load(ACC, i, FP, s);
-      // found in stack, return
+  for ( int i = local_vec.size() - 1; i >= 0; --i ) {
+    if ( local_vec[i] == objname ) {
+      emit_load(ACC, i + LOCAL_OFFSET, FP, s);
+      // found in local variable, return
+      return;
+    }
+  }
+  for ( int i = formal_vec.size() - 1; i >= 0; --i ) {
+    if ( formal_vec[i] == objname ) {
+      emit_load(ACC, i + FORMAL_OFFSET, FP, s);
+      // found in formal, return
       return;
     }
   }

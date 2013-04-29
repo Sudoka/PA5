@@ -10,7 +10,6 @@ submission: ..
 
 	-1 (assignment-val)	 Evaluating assignment expressions
 	-1 (basic-init)	 Default initial values of baisc classes 
-	-1 (basicequality)	 Simple equality tests
 	-1 (bigexpr)	 A large arithmetic expression
 	-1 (bool)	 Boolean objects
 	-1 (calls)	 Method calls
@@ -22,8 +21,6 @@ submission: ..
 	-1 (dispatch-override-dynamic)	 Dispatch on an overridden method
 	-1 (dispatch-override-static)	 Static dispatch on an overridden method
 	-1 (dispatch-void-dynamic)	 Dispatch on a void object (runtime error)
-	-1 (dispatch-void-static)	 Static dispatch on a void object (runtime error)
-	-1 (dispatchvoidlet)	 Dispatch on a void object created with let (runtime error)
 	-1 (eval-order-args)	 Checking evaluation order of function args on dispatch
 	-1 (eval-order-arith)	 Checking evaluation order of arithmetic expressions
 	-1 (exp)	 An exponent function
@@ -43,7 +40,6 @@ submission: ..
 	-1 (new-self-init)	 Checking evaluation of attribute initialization exprs on a "new"d object
 	-1 (new-st)	 New SELF_TYPE behavior
 	-1 (newbasic)	 Use of new with basic classes
-	-1 (not)	 "not" operator
 	-1 (objectequality)	 Object equality tests
 	-1 (override)	 Dispatch of overridden functions
 	-1 (primes)	 prime number program from examples directory
@@ -51,22 +47,18 @@ submission: ..
 	-1 (selftypeattribute)	 Attribute of type SELF_TYPE
 	-1 (sequence)	 Expression sequence (altering objects repetedly)
 	-1 (shadow-attr-case)	 Case bound variable shadows a same-named attribute
-	-1 (shadow-attr-formal)	 Formal parameter shadows a same-named attribute
-	-1 (shadow-attr-let)	 Let bound variable shadows a same-named attribute
 	-1 (shadow-case-let)	 Let bound variable shadows a same-named case-bound variable
 	-1 (shadow-formal-case)	 Case bound variable shadows a formal parameter
-	-1 (shadow-formal-let)	 Let bound variable shadows a formal parameter
 	-1 (shadow-let-case)	 Case bound variable shadows a let bound variable
 	-1 (shadow-let-let)	 Let bound variable shadows a same-named let bound variable
 	-1 (string-methods)	 Dispatch of string methods
-	-1 (typename)	 Object.type_name should return string representation of the dynamic type dispatched
 [GC Test Case: lam-gc.cl]
 	-5 (lam-gc)	 Lambda example with garbage collection
 [GC Test Case: simple-gc.cl]
 	-5 (simple-gc)	 Simple examine with garbage collection
 =====================================================================
-You got a score of 1 out of 63.
+You got a score of 9 out of 63.
 
 Submit code: 
-PA4-1:b0d3269efaeb758dab75f020fe2a1449
+PA4-9:a62ae564730c0305f3a41acfddc7f7b7
 

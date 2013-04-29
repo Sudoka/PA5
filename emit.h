@@ -61,6 +61,10 @@
 #define ALIGN         "\t.align\t2\n"
 #define WORD          "\t.word\t"
 
+// information for dispatch
+#define FORMAL_OFFSET 3
+#define LOCAL_OFFSET -1
+
 //
 // register names
 //
