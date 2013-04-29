@@ -823,8 +823,28 @@ void CgenClassTable::code_object_init(CgenNodeP node) {
     buf += "_init";
     emit_jal((char*)buf.c_str(), str);
   }
+  // initial attr
+  if ( node->get_classtag() > stringclasstag ) {
+      Features features = node->features;
+      for ( int i = features->first(); features->more(i); i = features->next(i) ) {
+          Feature feature = features->nth(i);
+          if ( feature->get_type() == Attr ) {
+              attr_class* attr = static_cast<attr_class*>(feature);
+              if ( attr->init->type ) {
+                  str << "#attr init" << endl;
+                  attr->init->code(node, str);
+                  int idx = node->get_attr_index(attr->name);
+                  assert(idx != -1);
+                  emit_store(ACC, idx + DEFAULT_OBJFIELDS, SELF, str);
+                  str << "#attr end" << endl;
+              }
+          }
+      }
+  }
+
   // load a0
   emit_move(ACC, SELF, str);
+
   // load from stack
   emit_load(FP, 3, SP, str);
   emit_load(SELF, 2, SP, str);
