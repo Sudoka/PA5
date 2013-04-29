@@ -62,7 +62,7 @@
 #define WORD          "\t.word\t"
 
 // information for dispatch
-#define FORMAL_OFFSET 3
+#define FORMAL_OFFSET 2
 #define LOCAL_OFFSET -1
 
 //

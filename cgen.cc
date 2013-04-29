@@ -1174,7 +1174,7 @@ void assign_class::code(CgenNodeP classnode, ostream &s) {
   }
   for ( int i = formal_vec.size() - 1; i >= 0; --i ) {
     if ( formal_vec[i] == objname ) {
-      emit_store(ACC, i + FORMAL_OFFSET, FP, s);
+      emit_store(ACC, (formal_vec.size() - i) + FORMAL_OFFSET, FP, s);
       // found in formal, return
       return;
     }
@@ -1221,13 +1221,9 @@ void static_dispatch_class::code(CgenNodeP classnode, ostream &s) {
 void dispatch_class::code(CgenNodeP classnode, ostream &s) {
   //s << "#dispatch" << endl;
   // generate formals
-  std::vector<Expression> formal_list;
   for ( int i = actual->first(); actual->more(i); i = actual->next(i) ) {
-    formal_list.push_back(actual->nth(i));
-  }
-  for ( int i = formal_list.size() - 1; i >= 0; --i ) {
-    formal_list[i]->code(classnode, s);
-    emit_push(ACC, s);
+      actual->nth(i)->code(classnode, s);
+      emit_push(ACC, s);
   }
 
   // object expr for dispatch
@@ -1552,7 +1548,7 @@ void object_class::code(CgenNodeP classnode, ostream &s) {
   }
   for ( int i = formal_vec.size() - 1; i >= 0; --i ) {
     if ( formal_vec[i] == objname ) {
-      emit_load(ACC, i + FORMAL_OFFSET, FP, s);
+      emit_load(ACC, (formal_vec.size() - i) + FORMAL_OFFSET, FP, s);
       // found in formal, return
       return;
     }

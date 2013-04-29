@@ -8,7 +8,6 @@ make: Leaving directory `/home/yyhuang/compiler/PA5'
 =====================================================================
 submission: ..
 
-	-1 (assignment-val)	 Evaluating assignment expressions
 	-1 (basic-init)	 Default initial values of baisc classes 
 	-1 (bigexpr)	 A large arithmetic expression
 	-1 (calls)	 Method calls
@@ -20,7 +19,6 @@ submission: ..
 	-1 (dispatch-override-dynamic)	 Dispatch on an overridden method
 	-1 (dispatch-override-static)	 Static dispatch on an overridden method
 	-1 (dispatch-void-dynamic)	 Dispatch on a void object (runtime error)
-	-1 (eval-order-args)	 Checking evaluation order of function args on dispatch
 	-1 (eval-order-arith)	 Checking evaluation order of arithmetic expressions
 	-1 (exp)	 An exponent function
 	-1 (fact)	 A factorial function
@@ -54,8 +52,8 @@ submission: ..
 [GC Test Case: simple-gc.cl]
 	-5 (simple-gc)	 Simple examine with garbage collection
 =====================================================================
-You got a score of 12 out of 63.
+You got a score of 14 out of 63.
 
 Submit code: 
-PA4-12:ccd5e85e60b3e4a7dcc6d6f19e91b475
+PA4-14:0a6501cdc4a4f3ee9ed7f7884023d9fc
 
