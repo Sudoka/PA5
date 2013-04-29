@@ -2,6 +2,6 @@
 *.s
 cgen
 data
-example
+example*
 grading
 tags
