@@ -120,6 +120,8 @@ BoolConst truebool(TRUE);
 
 // label_idx is used for count label usage
 int label_idx = 0;
+std::map<Symbol, CgenNodeP> class_map;
+std::map<Symbol, int> attr_map;
 
 //*********************************************************
 //
@@ -640,6 +642,7 @@ void CgenClassTable::code_classname_tables()
   }
   str << "class_objTab:" << endl;
   for ( int n = node_vec.size() - 1; n >= 0; --n ) {
+    class_map.insert(std::make_pair(node_vec[n]->name, node_vec[n]));
     str << WORD << node_vec[n]->name << "_protObj" << endl;
     str << WORD << node_vec[n]->name << "_init" << endl;
   }
