@@ -122,7 +122,7 @@ BoolConst truebool(TRUE);
 // label_idx is used for count label usage
 int label_idx = 0;
 std::map<Symbol, CgenNodeP> class_map;
-std::map<Symbol, int> attr_map;
+std::vector<std::string> attr_vec;
 
 //*********************************************************
 //
@@ -841,6 +841,15 @@ void CgenClassTable::code_class_methods() {
         Feature feature = features->nth(i);
         if ( feature->get_type() == Method ) {
           method_class* method = static_cast<method_class*>(feature);
+
+          // put attr in attr_vec for future use - calculate attr location in stack
+          Formals formals = method->formals;
+          attr_vec.clear();
+          for ( int j = formals->first(); formals->more(j); j = formals->next(j) ) {
+            formal_class* formal = static_cast<formal_class*>(formals->nth(j));
+            attr_vec.push_back(formal->name->get_string());
+          }
+
           str << l->hd()->name << "." << method->name << ":" << endl;
           // save caller's information to stack
           emit_addiu(SP, SP, -(WORD_SIZE*3), str);
@@ -861,7 +870,7 @@ void CgenClassTable::code_class_methods() {
           emit_load(FP, 3, SP, str);
           emit_load(SELF, 2, SP, str);
           emit_load(RA, 1, SP, str);
-          emit_addiu(SP, SP, WORD_SIZE*(3 + method->formals->len()), str);
+          emit_addiu(SP, SP, WORD_SIZE*(3 + formals->len()), str);
 
           // return
           emit_return(str);
