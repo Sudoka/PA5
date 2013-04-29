@@ -861,7 +861,7 @@ void CgenClassTable::code_class_methods() {
           // setup frame pointer
           emit_addiu(FP, SP, WORD_SIZE, str);
 
-          // save a0
+          // setup s0
           emit_move(SELF, ACC, str);
 
           // generate code inside function defintion
