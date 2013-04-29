@@ -326,13 +326,13 @@ static void emit_branch(int l, ostream& s)
 static void emit_push(char *reg, ostream& str)
 {
   emit_store(reg,0,SP,str);
-  emit_addiu(SP,SP,-4,str);
+  emit_addiu(SP,SP,-WORD_SIZE,str);
 }
 
 static void emit_pop(char *reg, ostream& str)
 {
   emit_load(reg,1,SP,str);
-  emit_addiu(SP,SP,4,str);
+  emit_addiu(SP,SP,WORD_SIZE,str);
 }
 
 //
@@ -357,7 +357,7 @@ static void emit_test_collector(ostream &s)
   emit_move(ACC, SP, s); // stack end
   emit_move(A1, ZERO, s); // allocate nothing
   s << JAL << gc_collect_names[cgen_Memmgr] << endl;
-  emit_addiu(SP,SP,4,s);
+  emit_addiu(SP,SP,WORD_SIZE,s);
   emit_load(ACC,0,SP,s);
 }
 
@@ -811,7 +811,7 @@ void CgenClassTable::code_object_init(CgenNodeP node) {
   emit_store(SELF, 2, SP, str);
   emit_store(RA, 1, SP, str);
   // frame pointer
-  emit_addiu(FP, SP, 4, str);
+  emit_addiu(FP, SP, WORD_SIZE, str);
   // save a0
   emit_move(SELF, ACC, str);
   // call parent
@@ -848,7 +848,7 @@ void CgenClassTable::code_class_methods() {
           emit_store(RA, 1, SP, str);
 
           // setup frame pointer
-          emit_addiu(FP, SP, 4, str);
+          emit_addiu(FP, SP, WORD_SIZE, str);
 
           // save a0
           emit_move(SELF, ACC, str);
@@ -1247,7 +1247,7 @@ void plus_class::code(CgenNodeP classnode, ostream &s) {
   e2->code(classnode, s);
   emit_pop(T1, s);
   emit_add(ACC, T1, ACC, s);
-  emit_addiu(SP, SP, -4, s);
+  emit_addiu(SP, SP, -WORD_SIZE, s);
 }
 
 void sub_class::code(CgenNodeP classnode, ostream &s) {
@@ -1257,7 +1257,7 @@ void sub_class::code(CgenNodeP classnode, ostream &s) {
   e2->code(classnode, s);
   emit_pop(T1, s);
   emit_sub(ACC, T1, ACC, s);
-  emit_addiu(SP, SP, -4, s);
+  emit_addiu(SP, SP, -WORD_SIZE, s);
 }
 
 void mul_class::code(CgenNodeP classnode, ostream &s) {
@@ -1267,7 +1267,7 @@ void mul_class::code(CgenNodeP classnode, ostream &s) {
   e2->code(classnode, s);
   emit_pop(T1, s);
   emit_mul(ACC, T1, ACC, s);
-  emit_addiu(SP, SP, -4, s);
+  emit_addiu(SP, SP, -WORD_SIZE, s);
 }
 
 void divide_class::code(CgenNodeP classnode, ostream &s) {
@@ -1277,7 +1277,7 @@ void divide_class::code(CgenNodeP classnode, ostream &s) {
   e2->code(classnode, s);
   emit_pop(T1, s);
   emit_div(ACC, T1, ACC, s);
-  emit_addiu(SP, SP, -4, s);
+  emit_addiu(SP, SP, -WORD_SIZE, s);
 }
 
 void neg_class::code(CgenNodeP classnode, ostream &s) {
@@ -1418,7 +1418,7 @@ void object_class::code(CgenNodeP classnode, ostream &s) {
   int idx = classnode->get_attr_index(name);
   if ( idx != -1 ) {
     // class attr
-    emit_load(ACC, idx + 3, SELF, s);
+    emit_load(ACC, idx + DEFAULT_OBJFIELDS, SELF, s);
   }
   
 }
