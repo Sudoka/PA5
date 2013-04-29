@@ -843,7 +843,7 @@ void CgenClassTable::code_class_methods() {
           method_class* method = static_cast<method_class*>(feature);
           str << l->hd()->name << "." << method->name << ":" << endl;
           // save caller's information to stack
-          emit_addiu(SP, SP, -12, str);
+          emit_addiu(SP, SP, -(WORD_SIZE*3), str);
           emit_store(FP, 3, SP, str);
           emit_store(SELF, 2, SP, str);
           emit_store(RA, 1, SP, str);
@@ -861,7 +861,7 @@ void CgenClassTable::code_class_methods() {
           emit_load(FP, 3, SP, str);
           emit_load(SELF, 2, SP, str);
           emit_load(RA, 1, SP, str);
-          emit_addiu(SP, SP, 12, str);
+          emit_addiu(SP, SP, WORD_SIZE*3), str);
 
           // return
           emit_return(str);
@@ -1163,7 +1163,7 @@ void static_dispatch_class::code(CgenNodeP classnode, ostream &s) {
 
   emit_label_def(label_idx++, s);
   // locate dispatch table
-  emit_load(T1, 2, ACC, s);
+  emit_load(T1, DISPTABLE_OFFSET, ACC, s);
   // locate dispatch function location
   int idx = classnode->get_method_index(name);
   emit_load(T1, idx, T1, s);
@@ -1180,7 +1180,7 @@ void dispatch_class::code(CgenNodeP classnode, ostream &s) {
 
   emit_label_def(label_idx++, s);
   // locate dispatch table
-  emit_load(T1, 2, ACC, s);
+  emit_load(T1, DISPTABLE_OFFSET, ACC, s);
   // locate dispatch function location
   int idx = classnode->get_method_index(name);
   emit_load(T1, idx, T1, s);
