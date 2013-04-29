@@ -1159,7 +1159,7 @@ CgenNode::CgenNode(Class_ nd, Basicness bstatus, CgenClassTableP ct, bool inc_cl
 //*****************************************************************
 
 void assign_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#assign" << endl;
+  //s << "#assign" << endl;
   // generate expr code
   expr->code(classnode, s);
 
@@ -1177,7 +1177,7 @@ void assign_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void static_dispatch_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#static_dispatch" << endl;
+  //s << "#static_dispatch" << endl;
   // generate formals
   std::vector<Expression> formal_list;
   for ( int i = actual->first(); actual->more(i); i = actual->next(i) ) {
@@ -1211,7 +1211,7 @@ void static_dispatch_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void dispatch_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#dispatch" << endl;
+  //s << "#dispatch" << endl;
   // generate formals
   std::vector<Expression> formal_list;
   for ( int i = actual->first(); actual->more(i); i = actual->next(i) ) {
@@ -1248,7 +1248,7 @@ void dispatch_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void cond_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#cond" << endl;
+  //s << "#cond" << endl;
   int branch_true = label_idx++;
   int branch_end = label_idx++;
 
@@ -1256,8 +1256,10 @@ void cond_class::code(CgenNodeP classnode, ostream &s) {
   emit_load_bool(T1, truebool, s);
   emit_beq(ACC, T1, branch_true, s);
   // false
+  //s << "#else" << endl;
   else_exp->code(classnode, s);
   emit_branch(branch_end, s);
+  //s << "#elseend" << endl;
   // true
   emit_label_def(branch_true, s);
   then_exp->code(classnode, s);
@@ -1266,7 +1268,7 @@ void cond_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void loop_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#loop" << endl;
+  //s << "#loop" << endl;
   int branch_cond = label_idx++;
   int branch_true = label_idx++;
   int branch_end = label_idx++;
@@ -1287,7 +1289,7 @@ void loop_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void typcase_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#typcase" << endl;
+  //s << "#typcase" << endl;
 }
 
 void block_class::code(CgenNodeP classnode, ostream &s) {
@@ -1297,7 +1299,7 @@ void block_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void let_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#let" << endl;
+  //s << "#let" << endl;
   init->code(classnode, s);
   // push let attr into stack
   attr_vec.push_back(identifier->get_string());
@@ -1312,7 +1314,7 @@ void let_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void plus_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#plus" << endl;
+  //s << "#plus" << endl;
   e1->code(classnode, s);
   emit_push(ACC, s);
   e2->code(classnode, s);
@@ -1322,7 +1324,7 @@ void plus_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void sub_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#sub" << endl;
+  //s << "#sub" << endl;
   e1->code(classnode, s);
   emit_push(ACC, s);
   e2->code(classnode, s);
@@ -1332,7 +1334,7 @@ void sub_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void mul_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#mul" << endl;
+  //s << "#mul" << endl;
   e1->code(classnode, s);
   emit_push(ACC, s);
   e2->code(classnode, s);
@@ -1342,7 +1344,7 @@ void mul_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void divide_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#div" << endl;
+  //s << "#div" << endl;
   e1->code(classnode, s);
   emit_push(ACC, s);
   e2->code(classnode, s);
@@ -1352,13 +1354,13 @@ void divide_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void neg_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#neg" << endl;
+  //s << "#neg" << endl;
   e1->code(classnode, s);
   emit_neg(ACC, ACC, s);
 }
 
 void lt_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#lt" << endl;
+  //s << "#lt" << endl;
   int branch_true = label_idx++;
   int branch_end = label_idx++;
 
@@ -1378,7 +1380,7 @@ void lt_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void eq_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#eq" << endl;
+  //s << "#eq" << endl;
   int branch_true = label_idx++;
   int branch_end = label_idx++;
 
@@ -1404,7 +1406,7 @@ void eq_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void leq_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#leq" << endl;
+  //s << "#leq" << endl;
   int branch_true = label_idx++;
   int branch_end = label_idx++;
 
@@ -1424,7 +1426,7 @@ void leq_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void comp_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#comp" << endl;
+  //s << "#comp" << endl;
   int branch_true = label_idx++;
   int branch_end = label_idx++;
 
@@ -1461,7 +1463,7 @@ void bool_const_class::code(CgenNodeP classnode, ostream& s)
 }
 
 void new__class::code(CgenNodeP classnode, ostream &s) {
-  s << "#new" << endl;
+  //s << "#new" << endl;
   // load class_objTab
   emit_load_address(T1, CLASSOBJTAB, s);
   if ( type_name->equal_string("SELF_TYPE", strlen("SELF_TYPE")) ) {
@@ -1489,7 +1491,7 @@ void new__class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void isvoid_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#isvoid" << endl;
+  //s << "#isvoid" << endl;
   int branch_true = label_idx++;
   int branch_end = label_idx++;
 
@@ -1510,7 +1512,6 @@ void no_expr_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void object_class::code(CgenNodeP classnode, ostream &s) {
-  s << "#obj" << endl;
   if ( name->equal_string("self", strlen("self")) ) {
     emit_move(ACC, SELF, s);
     return;
