@@ -80,7 +80,7 @@ public:
    void set_parentnd(CgenNodeP p);
    CgenNodeP get_parentnd() { return parentnd; }
    int basic() { return (basic_status == Basic); }
-   int getClasstag() { return classtag; }
+   int get_classtag() { return classtag; }
    void set_attr_index(Symbol name, int index);
    int get_attr_index(Symbol name);
    void set_method_index(Symbol name, int index);

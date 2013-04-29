@@ -24,8 +24,9 @@
 
 #include "cgen.h"
 #include "cgen_gc.h"
-#include <vector>
+#include "math.h"
 #include <set>
+#include <vector>
 
 extern void emit_string_constant(ostream& str, char *s);
 extern int cgen_debug;
@@ -739,19 +740,19 @@ void CgenClassTable::code_class_prototype(CgenNodeP node) {
   str << WORD << "-1" << endl;
   str << node->name << "_protObj:" << endl;
   // class tag
-  str << WORD << node->getClasstag() << endl;
+  str << WORD << node->get_classtag() << endl;
   // object size
   str << WORD << attr_vec.size() + 3 << endl;
   // dispatch information
   str << WORD << node->name << "_dispTab" << endl;
   // attributes
-  if ( node->getClasstag() == stringclasstag ) {
+  if ( node->get_classtag() == stringclasstag ) {
     IntEntry* entry = inttable.lookup_string("0");
     str << WORD;
     entry->code_ref(str);
     str << endl << WORD << 0 << endl;
   }
-  else if ( node->getClasstag() == boolclasstag || node->getClasstag() == intclasstag ) {
+  else if ( node->get_classtag() == boolclasstag || node->get_classtag() == intclasstag ) {
     str << WORD << 0 << endl;
   }
   else {
@@ -834,7 +835,7 @@ void CgenClassTable::code_object_init(CgenNodeP node) {
 
 void CgenClassTable::code_class_methods() {
   for ( List<CgenNode> *l = nds; l; l = l->tl() ) {
-    if ( l->hd()->getClasstag() > stringclasstag ) {
+    if ( l->hd()->get_classtag() > stringclasstag ) {
       Features features = l->hd()->features;
       for ( int i = features->first(); features->more(i); i = features->next(i) ) {
         Feature feature = features->nth(i);
@@ -1391,6 +1392,30 @@ void bool_const_class::code(CgenNodeP classnode, ostream& s)
 
 void new__class::code(CgenNodeP classnode, ostream &s) {
   s << "#new" << endl;
+  // load class_objTab
+  emit_load_address(T1, CLASSOBJTAB, s);
+  if ( type_name->equal_string("SELF_TYPE", strlen("SELF_TYPE")) ) {
+    // use T2 to save class tag
+    emit_load(T2, 0, SELF, s);
+  }
+  else {
+    CgenNodeP node = class_map.find(type_name)->second;
+    emit_load_imm(T2, node->get_classtag(), s);
+  }
+  // every object use 2 word in CLASSOBJTAB
+  // so classtag * (2 word) is the offset of current class object
+  // use shift instead of multiply
+  emit_sll(T2, T2, log2(WORD_SIZE*2), s);
+  emit_addu(T1, T1, T2, s);
+  // save T1 for inital
+  emit_push(T1, s);
+  // copy object
+  emit_load(ACC, 0, T1, s);
+  emit_jal("Object.copy", s);
+  // inital object, init function is object offset 4
+  emit_pop(T1, s);
+  emit_load(T1, WORD_SIZE, T1, s);
+  emit_jalr(T1, s);
 }
 
 void isvoid_class::code(CgenNodeP classnode, ostream &s) {
