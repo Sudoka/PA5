@@ -11,7 +11,6 @@ submission: ..
 	-1 (assignment-val)	 Evaluating assignment expressions
 	-1 (basic-init)	 Default initial values of baisc classes 
 	-1 (bigexpr)	 A large arithmetic expression
-	-1 (bool)	 Boolean objects
 	-1 (calls)	 Method calls
 	-1 (cells)	 Cellular automaton program from examples directory
 	-1 (case-none)	 Case with no matching branch
@@ -40,7 +39,6 @@ submission: ..
 	-1 (new-self-init)	 Checking evaluation of attribute initialization exprs on a "new"d object
 	-1 (new-st)	 New SELF_TYPE behavior
 	-1 (newbasic)	 Use of new with basic classes
-	-1 (objectequality)	 Object equality tests
 	-1 (override)	 Dispatch of overridden functions
 	-1 (primes)	 prime number program from examples directory
 	-1 (scoping)	 Scoping test
@@ -50,15 +48,14 @@ submission: ..
 	-1 (shadow-case-let)	 Let bound variable shadows a same-named case-bound variable
 	-1 (shadow-formal-case)	 Case bound variable shadows a formal parameter
 	-1 (shadow-let-case)	 Case bound variable shadows a let bound variable
-	-1 (shadow-let-let)	 Let bound variable shadows a same-named let bound variable
 	-1 (string-methods)	 Dispatch of string methods
 [GC Test Case: lam-gc.cl]
 	-5 (lam-gc)	 Lambda example with garbage collection
 [GC Test Case: simple-gc.cl]
 	-5 (simple-gc)	 Simple examine with garbage collection
 =====================================================================
-You got a score of 9 out of 63.
+You got a score of 12 out of 63.
 
 Submit code: 
-PA4-9:a62ae564730c0305f3a41acfddc7f7b7
+PA4-12:ccd5e85e60b3e4a7dcc6d6f19e91b475
 

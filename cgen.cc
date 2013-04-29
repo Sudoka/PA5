@@ -1167,7 +1167,7 @@ void assign_class::code(CgenNodeP classnode, ostream &s) {
   std::string objname(name->get_string());
   for ( int i = local_vec.size() - 1; i >= 0; --i ) {
     if ( local_vec[i] == objname ) {
-      emit_store(ACC, i + LOCAL_OFFSET, FP, s);
+      emit_store(ACC, LOCAL_OFFSET - i, FP, s);
       // found in local variable, return
       return;
     }
@@ -1545,7 +1545,7 @@ void object_class::code(CgenNodeP classnode, ostream &s) {
   std::string objname(name->get_string());
   for ( int i = local_vec.size() - 1; i >= 0; --i ) {
     if ( local_vec[i] == objname ) {
-      emit_load(ACC, i + LOCAL_OFFSET, FP, s);
+      emit_load(ACC, LOCAL_OFFSET - i, FP, s);
       // found in local variable, return
       return;
     }
