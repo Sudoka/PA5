@@ -861,7 +861,7 @@ void CgenClassTable::code_class_methods() {
           emit_load(FP, 3, SP, str);
           emit_load(SELF, 2, SP, str);
           emit_load(RA, 1, SP, str);
-          emit_addiu(SP, SP, WORD_SIZE*3), str);
+          emit_addiu(SP, SP, WORD_SIZE*(3 + method->formals->len()), str);
 
           // return
           emit_return(str);
@@ -1156,16 +1156,33 @@ void assign_class::code(CgenNodeP classnode, ostream &s) {
 
 void static_dispatch_class::code(CgenNodeP classnode, ostream &s) {
   s << "#static_dispatch" << endl;
+  // generate formals
+  std::vector<Expression> formal_list;
+  for ( int i = actual->first(); actual->more(i); i = actual->next(i) ) {
+    formal_list.push_back(actual->nth(i));
+  }
+  for ( int i = formal_list.size() - 1; i >= 0; --i ) {
+    formal_list[i]->code(classnode, s);
+    emit_push(ACC, s);
+  }
+
+  // object expr for dispatch
+  expr->code(classnode, s);
+
+  // check if object is 0
   emit_bne(ACC, ZERO, label_idx, s);
   emit_load_address(ACC, "str_const0", s);
   emit_load_imm(T1, get_line_number(), s);
   emit_jal("_dispatch_abort", s);
 
+  // really dispatch
   emit_label_def(label_idx++, s);
+
   // locate dispatch table
   emit_load(T1, DISPTABLE_OFFSET, ACC, s);
   // locate dispatch function location
-  int idx = classnode->get_method_index(name);
+  CgenNodeP node = class_map.find(type_name)->second;
+  int idx = node->get_method_index(name);
   emit_load(T1, idx, T1, s);
   // jump to method
   emit_jalr(T1, s);
@@ -1173,15 +1190,35 @@ void static_dispatch_class::code(CgenNodeP classnode, ostream &s) {
 
 void dispatch_class::code(CgenNodeP classnode, ostream &s) {
   s << "#dispatch" << endl;
+  // generate formals
+  std::vector<Expression> formal_list;
+  for ( int i = actual->first(); actual->more(i); i = actual->next(i) ) {
+    formal_list.push_back(actual->nth(i));
+  }
+  for ( int i = formal_list.size() - 1; i >= 0; --i ) {
+    formal_list[i]->code(classnode, s);
+    emit_push(ACC, s);
+  }
+
+  // object expr for dispatch
+  expr->code(classnode, s);
+
+  // check if object is 0
   emit_bne(ACC, ZERO, label_idx, s);
   emit_load_address(ACC, "str_const0", s);
   emit_load_imm(T1, get_line_number(), s);
   emit_jal("_dispatch_abort", s);
 
+  // really dispatch
   emit_label_def(label_idx++, s);
+
   // locate dispatch table
   emit_load(T1, DISPTABLE_OFFSET, ACC, s);
   // locate dispatch function location
+  // get class of expr for method location
+  if ( !expr->type->equal_string("SELF_TYPE", strlen("SELF_TYPE")) ) {
+    classnode = class_map.find(expr->type)->second;
+  }
   int idx = classnode->get_method_index(name);
   emit_load(T1, idx, T1, s);
   // jump to method
@@ -1414,7 +1451,7 @@ void new__class::code(CgenNodeP classnode, ostream &s) {
   emit_jal("Object.copy", s);
   // inital object, init function is object offset 4
   emit_pop(T1, s);
-  emit_load(T1, WORD_SIZE, T1, s);
+  emit_load(T1, 1, T1, s);
   emit_jalr(T1, s);
 }
 
