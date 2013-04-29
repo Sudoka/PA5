@@ -1160,7 +1160,20 @@ CgenNode::CgenNode(Class_ nd, Basicness bstatus, CgenClassTableP ct, bool inc_cl
 
 void assign_class::code(CgenNodeP classnode, ostream &s) {
   s << "#assign" << endl;
+  // generate expr code
   expr->code(classnode, s);
+
+  std::string objname(name->get_string());
+  for ( int i = attr_vec.size() - 1; i >= 0; --i ) {
+    if ( attr_vec[i] == objname ) {
+      emit_store(ACC, i, FP, s);
+      // found in stack, return
+      return;
+    }
+  }
+  int idx = classnode->get_attr_index(name);
+  assert(idx != -1);
+  emit_store(ACC, idx + DEFAULT_OBJFIELDS, SELF, s);
 }
 
 void static_dispatch_class::code(CgenNodeP classnode, ostream &s) {
@@ -1285,6 +1298,17 @@ void block_class::code(CgenNodeP classnode, ostream &s) {
 
 void let_class::code(CgenNodeP classnode, ostream &s) {
   s << "#let" << endl;
+  init->code(classnode, s);
+  // push let attr into stack
+  attr_vec.push_back(identifier->get_string());
+  emit_push(ACC, s);
+
+  // generate body
+  body->code(classnode, s);
+
+  // pop let attr from stack
+  emit_addiu(SP, SP, WORD_SIZE, s);
+  attr_vec.pop_back();
 }
 
 void plus_class::code(CgenNodeP classnode, ostream &s) {
@@ -1482,15 +1506,27 @@ void isvoid_class::code(CgenNodeP classnode, ostream &s) {
 }
 
 void no_expr_class::code(CgenNodeP classnode, ostream &s) {
+  emit_load_address(ACC, ZERO, s);
 }
 
 void object_class::code(CgenNodeP classnode, ostream &s) {
   s << "#obj" << endl;
-  int idx = classnode->get_attr_index(name);
-  if ( idx != -1 ) {
-    // class attr
-    emit_load(ACC, idx + DEFAULT_OBJFIELDS, SELF, s);
+  if ( name->equal_string("self", strlen("self")) ) {
+    emit_move(ACC, SELF, s);
+    return;
   }
-  
+
+  std::string objname(name->get_string());
+  for ( int i = attr_vec.size() - 1; i >= 0; --i ) {
+    if ( attr_vec[i] == objname ) {
+      emit_load(ACC, i, FP, s);
+      // found in stack, return
+      return;
+    }
+  }
+
+  int idx = classnode->get_attr_index(name);
+  assert(idx != -1);
+  emit_load(ACC, idx + DEFAULT_OBJFIELDS, SELF, s);
 }
 
