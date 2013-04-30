@@ -14,8 +14,7 @@ submission: ..
 	-1 (case-none)	 Case with no matching branch
 	-1 (case-order)	 Simple case expression 
 	-1 (casevoid)	 Attempt to use void for case test expr 
-	-1 (copy-self-dispatch)	 Dispatching on a copy of an object created with copy()
-	-1 (dispatch-override-dynamic)	 Dispatch on an overridden method
+	-1 (dispatch-override-static)	 Static dispatch on an overridden method
 	-1 (dispatch-void-dynamic)	 Dispatch on a void object (runtime error)
 	-1 (eval-order-arith)	 Checking evaluation order of arithmetic expressions
 	-1 (exp)	 An exponent function
@@ -28,14 +27,12 @@ submission: ..
 	-1 (many_objects_on_heap)	 Allocating many objects on the heap
 	-1 (multiple-dispatch)	 Nested function dispatches
 	-1 (multiple-static-dispatch)	 Nested static dispatches
-	-1 (new-self-dispatch)	 Dispatch on a "new"d object
 	-1 (new-self-init)	 Checking evaluation of attribute initialization exprs on a "new"d object
 	-1 (new-st)	 New SELF_TYPE behavior
 	-1 (newbasic)	 Use of new with basic classes
 	-1 (override)	 Dispatch of overridden functions
 	-1 (primes)	 prime number program from examples directory
 	-1 (scoping)	 Scoping test
-	-1 (selftypeattribute)	 Attribute of type SELF_TYPE
 	-1 (sequence)	 Expression sequence (altering objects repetedly)
 	-1 (shadow-attr-case)	 Case bound variable shadows a same-named attribute
 	-1 (shadow-case-let)	 Let bound variable shadows a same-named case-bound variable
@@ -46,8 +43,8 @@ submission: ..
 [GC Test Case: simple-gc.cl]
 	-5 (simple-gc)	 Simple examine with garbage collection
 =====================================================================
-You got a score of 20 out of 63.
+You got a score of 23 out of 63.
 
 Submit code: 
-PA4-20:b1178c487c913f0f12bfcaecd30e1230
+PA4-23:710ef408f1fe8cf18209b3da81ee9ff0
 

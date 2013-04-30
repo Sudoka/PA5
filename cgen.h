@@ -84,8 +84,8 @@ public:
    int get_classtag() { return classtag; }
    void set_attr_index(Symbol name, int index);
    int get_attr_index(Symbol name);
-   void set_method_index(int classtag, Symbol name, int index);
-   int get_method_index(int classtag, Symbol name);
+   void set_method_index(Symbol name, int index);
+   int get_method_index(Symbol name);
 };
 
 class BoolConst 

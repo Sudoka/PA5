@@ -682,16 +682,30 @@ void CgenClassTable::code_classdisp_table(CgenNodeP node)
     node_vec.push_back(n);
   }
 
+  std::set<Symbol> method_set;
+  Features features = node->features;
+  for ( int i = features->first(); features->more(i); i = features->next(i) ) {
+    if ( features->nth(i)->get_type() == Method ) {
+      method_set.insert(static_cast<method_class*>(features->nth(i))->name);
+    }
+  }
+
   int index = 0;
   for ( int i = node_vec.size() - 1; i >= 0; --i ) {
     Features features = node_vec[i]->features;
     for ( int j = features->first(); features->more(j); j = features->next(j) ) {
       Feature feature = features->nth(j);
       if ( feature->get_type() == Method ) {
+        Symbol method_name = static_cast<method_class*>(feature)->name;
         str << WORD;
-        str << node_vec[i]->name<< ".";
-        str << static_cast<method_class*>(feature)->name << endl;
-        node->set_method_index(node_vec[i]->get_classtag(), static_cast<method_class*>(feature)->name, index++);
+        if ( node_vec[i] != node && method_set.find(method_name) != method_set.end() ) {
+          str << node->name << ".";
+        }
+        else {
+          str << node_vec[i]->name << ".";
+        }
+        str << method_name << endl;
+        node->set_method_index(method_name, index++);
       }
     }
   }
@@ -1118,13 +1132,13 @@ int CgenNode::get_attr_index(Symbol name)
   }
 }
 
-void CgenNode::set_method_index(int classtag, Symbol name, int index)
+void CgenNode::set_method_index(Symbol name, int index)
 {
   std::string strname = name->get_string();
   method_map.push_back(strname);
 }
 
-int CgenNode::get_method_index(int classtag, Symbol name)
+int CgenNode::get_method_index(Symbol name)
 {
   std::string strname = name->get_string();
   for ( int i = method_map.size() - 1; i >= 0; --i ) {
@@ -1257,7 +1271,7 @@ void static_dispatch_class::code(CgenNodeP classnode, ostream &s) {
   emit_load(T1, DISPTABLE_OFFSET, ACC, s);
   // locate dispatch function location
   CgenNodeP node = class_map.find(type_name)->second;
-  int idx = node->get_method_index(node->get_classtag(), name);
+  int idx = node->get_method_index(name);
   emit_load(T1, idx, T1, s);
   // jump to method
   emit_jalr(T1, s);
@@ -1290,7 +1304,7 @@ void dispatch_class::code(CgenNodeP classnode, ostream &s) {
   if ( !expr->type->equal_string("SELF_TYPE", strlen("SELF_TYPE")) ) {
     classnode = class_map.find(expr->type)->second;
   }
-  int idx = classnode->get_method_index(classnode->get_classtag(), name);
+  int idx = classnode->get_method_index(name);
   emit_load(T1, idx, T1, s);
   // jump to method
   emit_jalr(T1, s);
