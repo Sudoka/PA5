@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <vector>
 #include <map>
 #include "emit.h"
 #include "cool-tree.h"
@@ -67,7 +68,7 @@ private:
    int classtag;                              // classtag
    static int classcount;                     // classcount for classtag
    std::map<Symbol, int> attr_map;            // attr <-> idx map
-   std::map<Symbol, int> method_map;          // method <-> idx map
+   std::vector<std::string> method_map;       // method <-> idx map
 
 public:
    CgenNode(Class_ c,
@@ -83,8 +84,8 @@ public:
    int get_classtag() { return classtag; }
    void set_attr_index(Symbol name, int index);
    int get_attr_index(Symbol name);
-   void set_method_index(Symbol name, int index);
-   int get_method_index(Symbol name);
+   void set_method_index(int classtag, Symbol name, int index);
+   int get_method_index(int classtag, Symbol name);
 };
 
 class BoolConst 

@@ -16,7 +16,6 @@ submission: ..
 	-1 (casevoid)	 Attempt to use void for case test expr 
 	-1 (copy-self-dispatch)	 Dispatching on a copy of an object created with copy()
 	-1 (dispatch-override-dynamic)	 Dispatch on an overridden method
-	-1 (dispatch-override-static)	 Static dispatch on an overridden method
 	-1 (dispatch-void-dynamic)	 Dispatch on a void object (runtime error)
 	-1 (eval-order-arith)	 Checking evaluation order of arithmetic expressions
 	-1 (exp)	 An exponent function
@@ -47,8 +46,8 @@ submission: ..
 [GC Test Case: simple-gc.cl]
 	-5 (simple-gc)	 Simple examine with garbage collection
 =====================================================================
-You got a score of 19 out of 63.
+You got a score of 20 out of 63.
 
 Submit code: 
-PA4-19:2c9fdec77af022d7b60cdadd9ad6ee93
+PA4-20:b1178c487c913f0f12bfcaecd30e1230
 
