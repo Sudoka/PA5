@@ -1386,12 +1386,15 @@ void let_class::code(CgenNodeP classnode, ostream &s) {
   // push let attr into stack
   local_vec.push_back(identifier->get_string());
   emit_push(ACC, s);
+  s << "#let pushed" << endl;
 
   // generate body
   body->code(classnode, s);
 
   // pop let attr from stack
+  s << "#let end start" << endl;
   emit_addiu(SP, SP, WORD_SIZE, s);
+  s << "#let end end" << endl;
   local_vec.pop_back();
 }
 
@@ -1399,10 +1402,21 @@ void plus_class::code(CgenNodeP classnode, ostream &s) {
   //s << "#plus" << endl;
   e1->code(classnode, s);
   emit_push(ACC, s);
+
   e2->code(classnode, s);
+  emit_jal("Object.copy", s);
+  emit_push(ACC, s);
+
+  emit_pop(T2, s);
   emit_pop(T1, s);
-  emit_add(ACC, T1, ACC, s);
-  emit_addiu(SP, SP, -WORD_SIZE, s);
+
+  //emit_fetch_int(ACC, ACC, s);
+  emit_fetch_int(T1, T1, s);
+  emit_fetch_int(T2, T2, s);
+  emit_add(ACC, T1, T2, s);
+  //emit_add(ACC, T1, T2, s);
+
+  s << "#add end" << endl;
 }
 
 void sub_class::code(CgenNodeP classnode, ostream &s) {
@@ -1410,9 +1424,9 @@ void sub_class::code(CgenNodeP classnode, ostream &s) {
   e1->code(classnode, s);
   emit_push(ACC, s);
   e2->code(classnode, s);
+  emit_jal("Object.copy", s);
   emit_pop(T1, s);
   emit_sub(ACC, T1, ACC, s);
-  emit_addiu(SP, SP, -WORD_SIZE, s);
 }
 
 void mul_class::code(CgenNodeP classnode, ostream &s) {
@@ -1420,9 +1434,9 @@ void mul_class::code(CgenNodeP classnode, ostream &s) {
   e1->code(classnode, s);
   emit_push(ACC, s);
   e2->code(classnode, s);
+  emit_jal("Object.copy", s);
   emit_pop(T1, s);
   emit_mul(ACC, T1, ACC, s);
-  emit_addiu(SP, SP, -WORD_SIZE, s);
 }
 
 void divide_class::code(CgenNodeP classnode, ostream &s) {
@@ -1430,14 +1444,15 @@ void divide_class::code(CgenNodeP classnode, ostream &s) {
   e1->code(classnode, s);
   emit_push(ACC, s);
   e2->code(classnode, s);
+  emit_jal("Object.copy", s);
   emit_pop(T1, s);
   emit_div(ACC, T1, ACC, s);
-  emit_addiu(SP, SP, -WORD_SIZE, s);
 }
 
 void neg_class::code(CgenNodeP classnode, ostream &s) {
   //s << "#neg" << endl;
   e1->code(classnode, s);
+  emit_jal("Object.copy", s);
   emit_neg(ACC, ACC, s);
 }
 
