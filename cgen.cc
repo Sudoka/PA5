@@ -1268,7 +1268,9 @@ void static_dispatch_class::code(CgenNodeP classnode, ostream &s) {
   emit_label_def(label_idx++, s);
 
   // locate dispatch table
-  emit_load(T1, DISPTABLE_OFFSET, ACC, s);
+  emit_partial_load_address(T1, s);
+  s << type_name << DISPTAB_SUFFIX << endl;
+
   // locate dispatch function location
   CgenNodeP node = class_map.find(type_name)->second;
   int idx = node->get_method_index(name);
