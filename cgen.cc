@@ -760,7 +760,26 @@ void CgenClassTable::code_class_prototype(CgenNodeP node) {
     for ( int i = 0; i < attr_vec.size(); ++i ) {
       attr_class* attr = attr_vec[i];
       node->set_attr_index(attr->name, i);
-      str << WORD << 0 << endl;
+      if ( attr->type_decl->equal_string("String", strlen("String")) ) {
+        StringEntry* entry = stringtable.lookup_string("");
+        str << WORD;
+        entry->code_ref(str);
+        str << endl;
+      }
+      else if ( attr->type_decl->equal_string("Int", strlen("Int")) ) {
+        IntEntry* entry = inttable.lookup_string("0");
+        str << WORD;
+        entry->code_ref(str);
+        str << endl;
+      }
+      else if (attr->type_decl->equal_string("Bool", strlen("Bool")) ) {
+        str << WORD;
+        falsebool.code_ref(str);
+        str << endl;
+      }
+      else {
+        str << WORD << 0 << endl;
+      }
     }
   }
 }

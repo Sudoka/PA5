@@ -8,7 +8,6 @@ make: Leaving directory `/home/yyhuang/compiler/PA5'
 =====================================================================
 submission: ..
 
-	-1 (basic-init)	 Default initial values of baisc classes 
 	-1 (bigexpr)	 A large arithmetic expression
 	-1 (calls)	 Method calls
 	-1 (cells)	 Cellular automaton program from examples directory
@@ -25,12 +24,9 @@ submission: ..
 	-1 (fibo)	 A Fibonacci function
 	-1 (hairyscary)	 hairy-scary program from examples directory
 	-1 (init-default)	 Initialization of arguments for a "new"d object
-	-1 (init-order-self)	 Evaluation order of attribute initializers
-	-1 (init-order-super)	 Evaluation order of superclass vs subclass attribute initializers
 	-1 (let-nested)	 Nested lets
 	-1 (letinit)	 Let using default initial values
 	-1 (many_objects_on_heap)	 Allocating many objects on the heap
-	-1 (mod-param)	 Method that modifies a parameter
 	-1 (multiple-dispatch)	 Nested function dispatches
 	-1 (multiple-static-dispatch)	 Nested static dispatches
 	-1 (new-self-dispatch)	 Dispatch on a "new"d object
@@ -46,14 +42,13 @@ submission: ..
 	-1 (shadow-case-let)	 Let bound variable shadows a same-named case-bound variable
 	-1 (shadow-formal-case)	 Case bound variable shadows a formal parameter
 	-1 (shadow-let-case)	 Case bound variable shadows a let bound variable
-	-1 (string-methods)	 Dispatch of string methods
 [GC Test Case: lam-gc.cl]
 	-5 (lam-gc)	 Lambda example with garbage collection
 [GC Test Case: simple-gc.cl]
 	-5 (simple-gc)	 Simple examine with garbage collection
 =====================================================================
-You got a score of 14 out of 63.
+You got a score of 19 out of 63.
 
 Submit code: 
-PA4-14:0a6501cdc4a4f3ee9ed7f7884023d9fc
+PA4-19:2c9fdec77af022d7b60cdadd9ad6ee93
 
